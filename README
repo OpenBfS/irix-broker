@@ -1,0 +1,8 @@
+To create irix-broker simply build it with:
+
+    mvn package
+
+and find from:
+
+    target/bfs-irixbroker.jar
+

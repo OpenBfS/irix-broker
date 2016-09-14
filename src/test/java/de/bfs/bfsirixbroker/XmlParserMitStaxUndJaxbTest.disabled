@@ -1,0 +1,96 @@
+package de.bfs.irixbroker;
+
+import java.io.*;
+import java.text.DecimalFormat;
+import java.util.*;
+import org.junit.*;
+
+public class XmlParserMitStaxUndJaxbTest
+{
+   private static final String TEST_XSD_DATEI = "IRIX.xsd";
+   private static final String TEST_XML_DATEI = "Bild1.xml";
+   private static final String ENCODING       = "UTF-8";
+   private static final String PACKAGE        = "de.bfs.irixbroker";
+
+   /** Die main()-Methode ist nur fuer manuelle Testzwecke */
+   public static void main( String[] args ) throws Exception
+   {
+     /* if( args.length != 4 ) {
+         System.out.println( "\nBitte XSD-Schema, XML-Dokument, Encoding und den Package-Namen der Zielklassen angeben, z.B.:\n" +
+                             "java XmlParserMitStaxUndJaxbTest Buecher.xsd Buecher.xml UTF-8 de.meinefirma.buecherentities\n" );
+         return;
+      }*/
+
+   //   if( args[0] != null && args[0].trim().length() > 0 ) {
+         long startZeit = System.nanoTime();
+         Reader xml = new InputStreamReader( new FileInputStream( TEST_XML_DATEI ), ENCODING );
+         XmlParserMitStaxUndJaxb.validate( TEST_XSD_DATEI, xml );
+         xml.close();
+         System.out.println( "\nValidierungsdauer: " + ermittleDauer( startZeit ) + "\n" );
+  //    }
+
+       startZeit = System.nanoTime();
+      xml = new InputStreamReader( new FileInputStream( TEST_XML_DATEI ), ENCODING );
+//      long anzahlElemente = XmlParserMitStaxUndJaxb.parseXmlElemente( xml, args[3], new DefaultElementeVerarbeitungImpl() );
+      long anzahlElemente = XmlParserMitStaxUndJaxb.parseXmlElemente( xml, PACKAGE, new DefaultElementeVerarbeitungImpl() );
+      xml.close();
+      System.out.println( "\nElementeanzahl: " + anzahlElemente + ", Parsingdauer: " + ermittleDauer( startZeit ) + "\n" );
+   }
+
+   @Test
+   public void testValidatorUndParser() throws Exception
+   {
+      ElementeSpeicherungInListe elementeSpeicherung = new ElementeSpeicherungInListe();
+      long anzahlElemente = XmlParserMitStaxUndJaxb.parseXmlElemente( TEST_XSD_DATEI, TEST_XML_DATEI, ENCODING, PACKAGE, elementeSpeicherung );
+      Assert.assertEquals( 5, anzahlElemente );
+      Assert.assertEquals( 5, elementeSpeicherung.elemente.size() );
+   //   Assert.assertTrue( elementeSpeicherung.elemente.get( 0 ) instanceof AutorType );
+    //  AutorType autor = (AutorType) elementeSpeicherung.elemente.get( 0 );
+   //   Assert.assertEquals(    "Hinz", autor.getName() );
+    //  Assert.assertEquals( "Hamburg", autor.getOrt() );
+  //    Assert.assertTrue( elementeSpeicherung.elemente.get( 4 ) instanceof BuchType );
+   //   BuchType buch = (BuchType) elementeSpeicherung.elemente.get( 4 );
+   //   Assert.assertEquals(             43, buch.getAutorID() );
+   //   Assert.assertEquals(            151, buch.getVerlagID() );
+   //   Assert.assertEquals( "XML mit Java", buch.getTitel() );
+   }
+
+   static String ermittleDauer( long startZeitNanoSek )
+   {
+      final DecimalFormat DF_2 = new DecimalFormat( "#,##0.00" );
+      long dauerMs = (System.nanoTime() - startZeitNanoSek) / 1000 / 1000;
+      if( dauerMs < 1000 ) return "" + dauerMs + " ms";
+      return DF_2.format( dauerMs / 1000. ) + " s";
+   }
+
+   /**
+    * ElementeVerarbeitung-Callback-Klasse, welche die XML-Elemente lediglich in einer Liste speichert.<br>
+    * (Darf nur bei nicht zu grossen XML-Dateien verwendet werden, um OutOfMemory zu vermeiden.)
+    */
+   static class ElementeSpeicherungInListe implements XmlParserMitStaxUndJaxb.ElementeVerarbeitung
+   {
+      public List<Object> elemente = new ArrayList<Object>();
+
+      @Override
+      public void verarbeite( Object element )
+      {
+         this.elemente.add( element );
+      }
+   }
+
+   static class DefaultElementeVerarbeitungImpl implements XmlParserMitStaxUndJaxb.ElementeVerarbeitung
+   {
+      @Override public void verarbeite( Object element )
+      {
+         try {
+            // Falls commons-beanutils-1.8.2.jar und commons-logging-1.1.1.jar im Classpath:
+            // return new TreeMap<String,Object>( PropertyUtils.describe( element ) );
+            // Sonst:
+            System.out.println( element.getClass().getName() );
+         } catch( Exception ex ) {
+            throw new RuntimeException( ex );
+         }
+      }
+   }
+}
+
