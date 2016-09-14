@@ -6,3 +6,6 @@ and find from:
 
     target/bfs-irixbroker.jar
 
+To go on with building irix-webservice install it into your local maven repo ~/.m2:
+
+    mvn install
