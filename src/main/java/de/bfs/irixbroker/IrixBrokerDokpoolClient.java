@@ -3,13 +3,19 @@
  */
 package de.bfs.irixbroker;
 
+import java.io.InputStream;
+import java.io.FileInputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Properties;
+
+import org.w3c.dom.Element;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import de.bfs.elan.client.DocumentPool;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
@@ -18,7 +24,7 @@ import org.iaea._2012.irix.format.identification.EventIdentificationType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
 
 import de.bfs.elan.client.Document;
-//import de.bfs.elan.client.ELANService;
+import de.bfs.elan.client.DocpoolBaseService;
 //import de.bfs.elan.client.ESD;
 import de.bfs.elan.client.Folder;
 
@@ -26,46 +32,64 @@ import de.bfs.elan.client.Folder;
  * @authors bp-fr, lem-fr - German Federal Office for Radiation Protection www.bfs.de
  *
  */
-public class IrixBrokerDokpoolClient {
+public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	
 	private String OrganisationReporting;
 	private XMLGregorianCalendar DateTime;
 	private String ReportContext;
-	private String Confidentiality;
-	private String scenario; //first element from List EventIdentification
+	private String Confidentiality="Free for Public Use";
+	private String scenario="routinemode"; //first element from List EventIdentification
 	
 	private List<AnnotationType> annot;
 	private List<FileEnclosureType> fet;
 	private String title;
-	private String main_text;
+	private String main_text="empty";
 	private String ReportId;
-	
-	
-	public IrixBrokerDokpoolClient(ReportType report)
+	private Element dt; //DOM Element with the content type
+	private Properties bfsIrixBrokerProperties;
+
+	private boolean success = false;
+
+
+	public IrixBrokerDokpoolClient(Properties bfsIBP)
 	{
-		//ReportType report = this.report;
+		bfsIrixBrokerProperties = bfsIBP;
+	}
+
+	public boolean doTheWork(ReportType report){
+		success = false;
+
+		success = readIdentification(report.getIdentification());
+		success = readAnnexes(report.getAnnexes());
+
+		success = DocPoolClient();
+		return success;
 	}
 	
 	private boolean readIdentification(IdentificationType ident)
 	{
 		boolean success=true;
-		
+
+		List<EventIdentificationType> eid=null;
+
 		setOrganisationReporting(ident.getOrganisationReporting());
 		setDateTime(ident.getDateAndTimeOfCreation());
 		setReportContext(ident.getReportContext().value());
-		setConfidentiality(ident.getConfidentiality().value());
-		setReportId(ident.getReportUUID());
-		
-		List<EventIdentificationType> eid= ident.getEventIdentifications().getEventIdentification();
-		
-		if(eid.isEmpty())
-		{
-			System.out.println("No eventidentification found!!");
-			success = false;
+		if(ident.getConfidentiality() != null) {
+			setConfidentiality(ident.getConfidentiality().value());
 		}
-		else
-		{
-			setScenario(eid.get(0).getValue());
+		setReportId(ident.getReportUUID());
+
+		if(ident.getEventIdentifications() != null){
+			eid= ident.getEventIdentifications().getEventIdentification();
+			if(eid.isEmpty()) {
+				System.out.println("No eventidentification found!!");
+				setScenario(scenario);
+				success = false;
+			} else {
+				setScenario(eid.get(0).getValue());
+				System.out.println("eventidentification filled");
+			}
 		}
 		
 		return success;
@@ -99,41 +123,32 @@ public class IrixBrokerDokpoolClient {
 		{
 			success=false;
 		}
-		
-		
-		
 		return success;
 	}
 	
-	private boolean ELANClient()
+	private boolean DocPoolClient()
 	{
-		boolean success=true;
-		
-		
-		// read host, port, user etc from the properties file
-		ResourceBundle resources;
-		
-		try {
-            resources = ResourceBundle.getBundle("resources.IrixBrokerDokpoolClient",
-                                                 Locale.getDefault());
-        } catch (MissingResourceException mre) {
-            System.err.println("resources/IrixBrokerDokpoolClient.properties not found");
-            return false;
-        }
+		success = true;
 
-		String proto=resources.getString("PROTO");
-		String host=resources.getString("HOST");
-		String port=resources.getString("PORT");
-		String ploneSite=resources.getString("PLONE_SITE");
-		String user=resources.getString("USER");
-		String pw =resources.getString("PW");
+		String proto=bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
+		String host=bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
+		String port=bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
+		String ploneSite=bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
+		String user=bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
+		String pw=bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
 		
 		String desc="Original date: "+DateTime.toString()+" "+ReportContext+ " "+ Confidentiality;
+
 		
 		//connect to wsapi4plone
-		/*ELANService elan = new ELANService(proto+"://"+host+":"+port+"/"+ploneSite,user,pw);
+		DocpoolBaseService dokpool = new DocpoolBaseService(proto+"://"+host+":"+port+"/"+ploneSite,user,pw);
 		
-		ESD myesd = elan.getPrimaryESD();
+		DocumentPool mydokpool = dokpool.getPrimaryDocumentPool();
+		List <DocumentPool> mydokpools = dokpool.getDocumentPools();
+		Folder userfolder = mydokpool.getUserFolder();
+
+		/** old code
+		ESD esd = elan.getPrimaryESD();
 		Folder userfolder = myesd.getUserFolder();
 		
 		// Fileencloser List first element for the Information category

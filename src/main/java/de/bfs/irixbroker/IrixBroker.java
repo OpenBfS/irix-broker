@@ -4,6 +4,7 @@
 package de.bfs.irixbroker;
 
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -33,14 +34,16 @@ public class IrixBroker {
     //alternatively get dokpool credentials from file
     /** Path to the IrixBroker Dokpool properties file. */
     private static final String DOKPOOL_CONN_LOC =
-            "/WEB-INF/irixbroker-dokpool.properties";
+            "./bfs-irixbroker.properties";
 
     /** Has {@link init()} successfully been called? */
     public boolean initialized;
 
-    public IrixBroker() {
+    public final Properties bfsIBP;
 
+    public IrixBroker(Properties bfsIrixBrokerProperties) {
         initialized = false;
+        bfsIBP = bfsIrixBrokerProperties;
     }
 
     /**
@@ -50,23 +53,6 @@ public class IrixBroker {
      * @throws IrixBrokerException if the servlet context cannot be obtained.
      */
     protected void init() throws IrixBrokerException {
-        WebServiceContext sc;
-        try {
-            sc = (WebServiceContext) context.getMessageContext().get(
-                    MessageContext.SERVLET_CONTEXT);
-        } catch (IllegalStateException e) {
-            System.err.println("Failed to get servlet context.");
-            throw new IrixBrokerException(
-                    "Failed to get servlet context.", e);
-        }
-
-        //String file = sc.getInitParameter("log4j-properties");
-        //String log4jProperties = sc.getRealPath(file);
-        //PropertyConfigurator.configure(log4jProperties);
-
-        //String dokpoolProp = sc.getInitParameter("irixbroker-dokpool-properties");
-        //String dokpoolProp = sc.getInitParameter("irixbroker-dokpool-properties");
-        //log.debug("Using: " + dokpoolProp + " to get Dokpool connection.");
 
         initialized = true;
     }
@@ -74,10 +60,10 @@ public class IrixBroker {
     /** {@inheritDoc} */
     //@Override
 	public void deliverIrixBroker(ReportType report) throws IrixBrokerException {
-        //if (!initialized) {
-        if (initialized) {
+        if (!initialized) {
             // Necessary because the servlet context is not accessible in ctor
             init();
+            // TODO move connection test to Client classes
             testRecipientConnection();
         }
 
@@ -102,10 +88,19 @@ public class IrixBroker {
 				//documents for ELAN
 				if(b.equals("ESD"))
 				{
-                    IrixBrokerDokpoolClient iec = new IrixBrokerDokpoolClient(report);
+                    IrixBrokerDokpoolClient iec = new IrixBrokerDokpoolClient(bfsIBP);
+                    iec.doTheWork(report);
                     log.debug(iec.getReportContext());
                     log.debug("iec created");
 				}
+
+                //data for VDB
+                if(b.equals("VDB"))
+                {
+                    //IrixBrokerVDBClient vdb = new IrixBrokerDokpoolClient(report);
+                    //vdb.doTheWork();
+                    log.debug("TODO: create vdb");
+                }
 			}
 			
 		}
@@ -119,4 +114,6 @@ public class IrixBroker {
     protected void testRecipientConnection() throws IrixBrokerException {
         log.debug("Testing if recipient is available.");
     }
+
+    /** TODO add void main() to make it usable via CLI */
 }
