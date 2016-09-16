@@ -49,9 +49,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.bfs.elan.client</groupId>
-            <artifactId>elan-client</artifactId>
-            <version>1.0</version>
+            <groupId>de.bfs</groupId>
+            <artifactId>dokpool-client</artifactId>
+            <version>0.9-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>

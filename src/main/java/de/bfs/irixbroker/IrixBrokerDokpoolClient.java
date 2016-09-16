@@ -1,21 +1,16 @@
 /**
- * 
+ * @authors bp-fr, lem-fr - German Federal Office for Radiation Protection www.bfs.de
+ *
  */
+
 package de.bfs.irixbroker;
 
-import java.io.InputStream;
-import java.io.FileInputStream;
 import java.util.List;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 import java.util.Properties;
-
-import org.w3c.dom.Element;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import de.bfs.elan.client.DocumentPool;
+import de.bfs.dokpool.client.DocumentPool;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
@@ -23,15 +18,14 @@ import org.iaea._2012.irix.format.annexes.FileEnclosureType;
 import org.iaea._2012.irix.format.identification.EventIdentificationType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
 
-import de.bfs.elan.client.Document;
-import de.bfs.elan.client.DocpoolBaseService;
-//import de.bfs.elan.client.ESD;
-import de.bfs.elan.client.Folder;
+import de.bfs.dokpool.client.Document;
+import de.bfs.dokpool.client.DocpoolBaseService;
+//import de.bfs.dokpool.client.ESD;
+import de.bfs.dokpool.client.Folder;
 
-/**
- * @authors bp-fr, lem-fr - German Federal Office for Radiation Protection www.bfs.de
- *
- */
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
 public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	
 	private String OrganisationReporting;
@@ -112,9 +106,14 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		else
 		{
 			setTitle(annot.get(0).getTitle());
-			setMain_text((String) annot.get(0).getText().getContent().get(0)) ;
-			
-			
+			if(annot.get(0).getText().getContent().size() >0) {
+				setMain_text((String) annot.get(0).getText().getContent().get(0)) ;
+			}
+
+			// get the DokPool Meta data
+			List<Element> el = annot.get(0).getAny();
+			Element e = el.get(0);
+			dt = extractSingleElement(e, TAG_DOKPOOLCONTENTTYPE);
 			
 		}
 		//get the attached files
@@ -124,6 +123,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 			success=false;
 		}
 		return success;
+	}
+
+	private boolean publish(Document d){
+		d.setWorkflowStatus("publish");
+		return true;
 	}
 	
 	private boolean DocPoolClient()
@@ -249,6 +253,29 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
 	public void setReportId(String reportId) {
 		ReportId = reportId;
+	}
+
+	public static Element extractSingleElement(Element element, String elementName)  {
+		// Kindelement mit dem gewünschten Tag-Namen abholen
+		final NodeList childElements = element.getElementsByTagName(elementName);
+
+		// Anzahl der Ergebnisse abfragen
+		final int count = childElements.getLength();
+
+		// Wenn kein Kindelement gefunden, null zur�ck geben
+		if(count == 0)
+		{
+			return null;
+		}
+
+		// Falls mehr als ein Kindelement gefunden, Fehler werfen
+		if(count > 1)
+		{
+			throw new IllegalArgumentException("No single child element <" + elementName + "> found! Found " + count + " instances!");
+		}
+
+		// Das erste Kindelement zur�ck geben
+		return (Element)childElements.item(0);
 	}
 
 	/**
