@@ -6,6 +6,7 @@
 package de.bfs.irixbroker;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.Properties;
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -20,7 +21,6 @@ import org.iaea._2012.irix.format.identification.IdentificationType;
 
 import de.bfs.dokpool.client.Document;
 import de.bfs.dokpool.client.DocpoolBaseService;
-//import de.bfs.dokpool.client.ESD;
 import de.bfs.dokpool.client.Folder;
 
 import org.w3c.dom.Element;
@@ -32,7 +32,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	private XMLGregorianCalendar DateTime;
 	private String ReportContext;
 	private String Confidentiality="Free for Public Use";
-	private String scenario="routinemode"; //first element from List EventIdentification
+	private String scenario = "routinemode"; //first element from List EventIdentification
+	private String[] scenarios = {scenario}; //first element from List EventIdentification
 	
 	private List<AnnotationType> annot;
 	private List<FileEnclosureType> fet;
@@ -149,24 +150,38 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		
 		DocumentPool mydokpool = dokpool.getPrimaryDocumentPool();
 		List <DocumentPool> mydokpools = dokpool.getDocumentPools();
+		/** no userfolder needed
 		Folder userfolder = mydokpool.getUserFolder();
+		 */
+		List<Folder> groupfolder = mydokpool.getGroupFolders();
+		Folder mygroupfolder = groupfolder.get(0);
 
-		/** old code
-		ESD esd = elan.getPrimaryESD();
-		Folder userfolder = myesd.getUserFolder();
-		
-		// Fileencloser List first element for the Information category
-		
-		String cat= (String) fet.get(0).getInformationCategoryOrInformationCategoryDescription().get(0).getValue();
-		
-		IRIXElanConfig iec=new IRIXElanConfig();
-		
-		Document d = userfolder.createDocument(ReportId, title, desc, main_text, iec.getESDdoctype(cat), scenario);
-		
+		Document d = mygroupfolder.createDocument(ReportId, title, desc," main_text", dt.getTextContent(), scenarios);
+		System.out.println(d.getTitle());
+
 		for(int i =0; i<fet.size(); i++ )
 		{
-			fet.get(i);
-		}*/
+			String t=fet.get(i).getTitle();
+			System.out.println("Anhang"+i+": "+t);
+
+			if(fet.get(i).getMimeType().equalsIgnoreCase(MT_PNG))
+			{
+				String aid = ReportId+Integer.toString(i);
+				System.out.println(aid);
+				d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
+			}
+			else
+			{
+				String aid = ReportId+Integer.toString(i);
+				d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
+			}
+
+
+		}
+		if (Confidentiality.equals(ID_CONF))
+		{
+			publish(d);
+		}
 		return success;
 	}
 	
@@ -210,7 +225,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		this.scenario = scenario;
 	}
 
-	
+	public String[] getScenarios() {
+		return scenarios;
+	}
+
+	public void setScenarios(String[] scenarios) {
+		this.scenarios = scenarios;
+	}
 
 	public List<AnnotationType> getAnnot() {
 		return annot;
@@ -227,8 +248,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	public void setFet(List<FileEnclosureType> fet) {
 		this.fet = fet;
 	}
-	
-	
 
 	public String getTitle() {
 		return title;
@@ -245,7 +264,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	public void setMain_text(String main_text) {
 		this.main_text = main_text;
 	}
-	
 
 	public String getReportId() {
 		return ReportId;
