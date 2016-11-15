@@ -5,6 +5,8 @@
 
 package de.bfs.irixbroker;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Properties;
@@ -40,7 +42,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	private String title;
 	private String main_text="empty";
 	private String ReportId;
-	private Element dt; //DOM Element with the content type
+	private Element dokpoolmeta; //DOM Element with the full dokpoolmeta information
 	private Properties bfsIrixBrokerProperties;
 
 	private boolean success = false;
@@ -113,8 +115,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
 			// get the DokPool Meta data
 			List<Element> el = annot.get(0).getAny();
-			Element e = el.get(0);
-			dt = extractSingleElement(e, TAG_DOKPOOLCONTENTTYPE);
+			dokpoolmeta = el.get(0);
+
 			
 		}
 		//get the attached files
@@ -156,7 +158,47 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		List<Folder> groupfolder = mydokpool.getGroupFolders();
 		Folder mygroupfolder = groupfolder.get(0);
 
-		Document d = mygroupfolder.createDocument(ReportId, title, desc," main_text", dt.getTextContent(), scenarios);
+		/** hashmap to store the dokpool meta data
+		 *
+		 */
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put("title",title);
+		properties.put("description",desc);
+		properties.put("text","<b>WebGisKlient</b>");
+		Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
+		properties.put("docType",dt.getTextContent());
+		properties.put("scenarios",scenarios);
+
+		//getting the dokpool metainformation by tagname
+		Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
+		Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
+		Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
+		Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
+		Element dom = extractSingleElement(dokpoolmeta, TAG_DOM);
+		Element dtype = extractSingleElement(dokpoolmeta, TAG_DATATYPE);
+		Element lbase = extractSingleElement(dokpoolmeta, TAG_LEGALBASE);
+		Element mp = extractSingleElement(dokpoolmeta, TAG_MEASURINGPROGRAM);
+		Element status = extractSingleElement(dokpoolmeta, TAG_STATUS);
+		Element sbegin = extractSingleElement(dokpoolmeta, TAG_SAMPLINGBEGIN);
+		Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
+
+		properties.put("subjects", new String[]{purpose.getTextContent(),
+												network.getTextContent(),
+												stid.getTextContent(),
+												st.getTextContent(),
+												dom.getTextContent(),
+												dtype.getTextContent(),
+												lbase.getTextContent(),
+												mp.getTextContent(),
+												status.getTextContent(),
+												sbegin.getTextContent(),
+												send.getTextContent()});
+
+		Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
+		if(elan.getTextContent().equalsIgnoreCase("true")) //other behaviors must be added later
+		properties.put("local_behaviors", new String[]{"elan"});
+
+		Document d = mygroupfolder.createDocument(ReportId, properties);
 		System.out.println(d.getTitle());
 
 		for(int i =0; i<fet.size(); i++ )
@@ -166,13 +208,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
 			if(fet.get(i).getMimeType().equalsIgnoreCase(MT_PNG))
 			{
-				String aid = ReportId+Integer.toString(i);
+				// String aid = ReportId+Integer.toString(i);
+				String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
 				System.out.println(aid);
 				d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
 			}
 			else
 			{
-				String aid = ReportId+Integer.toString(i);
+				//String aid = ReportId+Integer.toString(i);
+				String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
 				d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
 			}
 
