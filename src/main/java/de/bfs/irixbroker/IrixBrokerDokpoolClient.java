@@ -13,7 +13,6 @@ import java.util.Properties;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import de.bfs.dokpool.client.DocumentPool;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
@@ -22,6 +21,8 @@ import org.iaea._2012.irix.format.identification.EventIdentificationType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
 
 import de.bfs.dokpool.client.Document;
+import de.bfs.dokpool.client.DocumentPool;
+import de.bfs.dokpool.client.Scenario;
 import de.bfs.dokpool.client.DocpoolBaseService;
 import de.bfs.dokpool.client.Folder;
 
@@ -234,7 +235,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		return success;
 	}
 
-	public void getScenariosfromDokpool(Dokumentpool dp){
+	public void getScenariosfromDokpool(DocumentPool dp){
 
 		List<Scenario> scen = dp.getScenarios();
 		String [] sc = new String [scen.size()];
