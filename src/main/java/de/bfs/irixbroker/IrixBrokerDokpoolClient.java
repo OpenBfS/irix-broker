@@ -158,6 +158,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		List<Folder> groupfolder = mydokpool.getGroupFolders();
 		Folder mygroupfolder = groupfolder.get(0);
 
+		/** point the new Dokument to all scenarios of the dokpool
+		 *
+		 */
+		getScenariosfromDokpool(mydokpool);
+		
 		/** hashmap to store the dokpool meta data
 		 *
 		 */
@@ -227,6 +232,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 			publish(d);
 		}
 		return success;
+	}
+
+	public void getScenariosfromDokpool(Dokumentpool dp){
+
+		List<Scenario> scen = dp.getScenarios();
+		String [] sc = new String [scen.size()];
+		for (int i = 0; i<scen.size();i++)
+			sc[i]=scen.get(i).getId();
+
+		setScenarios(sc);
 	}
 	
 	public String getOrganisationReporting() {
