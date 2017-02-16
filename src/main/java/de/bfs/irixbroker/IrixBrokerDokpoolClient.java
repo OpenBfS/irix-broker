@@ -142,22 +142,29 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		String host=bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
 		String port=bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
 		String ploneSite=bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
+		String ploneDokpool=bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
+		String ploneGroupFolder=bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
 		String user=bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
 		String pw=bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
 		
 		String desc="Original date: "+DateTime.toString()+" "+ReportContext+ " "+ Confidentiality;
-
 		
 		//connect to wsapi4plone
 		DocpoolBaseService dokpool = new DocpoolBaseService(proto+"://"+host+":"+port+"/"+ploneSite,user,pw);
-		
+
+		//TODO use primaryDokpool (of irixauto) or configuration file?
 		DocumentPool mydokpool = dokpool.getPrimaryDocumentPool();
+		List<Folder> groupFolders = mydokpool.getGroupFolders();
 		List <DocumentPool> mydokpools = dokpool.getDocumentPools();
+		Folder mygroupfolder = mydokpool.getGroupFolders().get(0);
+		//change groupfolder to configured ploneGroupFolder
+		if(groupFolders.contains(mygroupfolder.getFolder(ploneGroupFolder))){
+			mygroupfolder = mygroupfolder.getFolder(ploneGroupFolder);
+		}
+
 		/** no userfolder needed
-		Folder userfolder = mydokpool.getUserFolder();
+		 Folder userfolder = mydokpool.getUserFolder();
 		 */
-		List<Folder> groupfolder = mydokpool.getGroupFolders();
-		Folder mygroupfolder = groupfolder.get(0);
 
 		/** point the new Dokument to all scenarios of the dokpool
 		 *
@@ -170,13 +177,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("title",title);
 		properties.put("description",desc);
-		properties.put("text","<b>WebGisKlient</b>");
+		properties.put("text","<b>eingestellt via WebGis-Klient</b>");
 		Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
 		properties.put("docType",dt.getTextContent());
 		properties.put("scenarios",scenarios);
 
 		//getting the dokpool metainformation by tagname
 		Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
+		Element dokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
+		Element dokpoolfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLFOLDER);
 		Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
 		Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
 		Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
@@ -189,6 +198,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
 
 		properties.put("subjects", new String[]{purpose.getTextContent(),
+												dokpoolname.getTextContent(),
+												dokpoolfolder.getTextContent(),
 												network.getTextContent(),
 												stid.getTextContent(),
 												st.getTextContent(),
@@ -201,8 +212,28 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 												send.getTextContent()});
 
 		Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
-		if(elan.getTextContent().equalsIgnoreCase("true")) //other behaviors must be added later
-		properties.put("local_behaviors", new String[]{"elan"});
+		if(elan.getTextContent().equalsIgnoreCase("true")){
+			properties.put("local_behaviors", new String[]{"elan"});
+			//TODO other behaviors must be added later
+		}
+
+		Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
+		if(rodos.getTextContent().equalsIgnoreCase("true")){
+            System.out.println("[INFO] RODOS behavior not yet available in Dokpool. Ignoring!");
+			//TODO properties.put("local_behaviors", new String[]{"rodos"});
+		}
+
+		Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
+		if(rei.getTextContent().equalsIgnoreCase("true")){
+			System.out.println("[INFO] REI behavior not yet available in Dokpool. Ignoring!");
+			//TODO properties.put("local_behaviors", new String[]{"rei"});
+		}
+
+		Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
+		if(doksys.getTextContent().equalsIgnoreCase("true")){
+			System.out.println("[INFO] DOKSYS behavior not yet available in Dokpool. Ignoring!");
+			//TODO properties.put("local_behaviors", new String[]{"doksys"});
+		}
 
 		Document d = mygroupfolder.createDocument(ReportId, properties);
 		System.out.println(d.getTitle());
@@ -212,16 +243,19 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 			String t=fet.get(i).getTitle();
 			System.out.println("Anhang"+i+": "+t);
 
-			if(fet.get(i).getMimeType().equalsIgnoreCase(MT_PNG))
+			if (MT_IMAGES.contains(fet.get(i).getMimeType()))
 			{
-				// String aid = ReportId+Integer.toString(i);
 				String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
-				System.out.println(aid);
 				d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
+			}
+			// TODO separate handling of movie files
+			else if (MT_MOVIES.contains(fet.get(i).getMimeType()))
+			{
+				String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
+				d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
 			}
 			else
 			{
-				//String aid = ReportId+Integer.toString(i);
 				String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
 				d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
 			}

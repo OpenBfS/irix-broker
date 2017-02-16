@@ -1,9 +1,14 @@
 package de.bfs.irixbroker;
 
+import java.util.List;
+import java.util.Arrays;
+
 public interface IrixBrokerDokpoolXMLNames {
 	
 	// Tag-Namen
 	String TAG_PURPOSE ="Purpose";
+	String TAG_DOKPOOLNAME = "DokpoolName";
+	String TAG_DOKPOOLFOLDER = "DokpoolFolder";
 	String TAG_DOKPOOLCONTENTTYPE ="DokpoolContentType";
 	String TAG_ISELAN = "IsElan";
 	String TAG_ISDOKSYS = "IsDoksys";
@@ -23,6 +28,13 @@ public interface IrixBrokerDokpoolXMLNames {
 	// allowed mime types
 	String MT_PDF="application/pdf";
 	String MT_PNG="image/png";
+	String MT_JPG="image/jpg";
+	String MT_JPEG="image/jpeg";
+	String MT_MP4="video/mp4";
+	String MT_OGG="video/ogg";
+	String MT_WEBM="video/webm";
+	List<String> MT_IMAGES= Arrays.asList(MT_JPEG, MT_JPG, MT_PNG);
+	List<String> MT_MOVIES= Arrays.asList(MT_MP4, MT_OGG, MT_WEBM);
 	
 	//used strings
 	String ID_CONF="Free for Public Use";
