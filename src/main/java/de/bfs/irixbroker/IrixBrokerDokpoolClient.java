@@ -158,8 +158,14 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		List <DocumentPool> mydokpools = dokpool.getDocumentPools();
 		Folder mygroupfolder = mydokpool.getGroupFolders().get(0);
 		//change groupfolder to configured ploneGroupFolder
-		if(groupFolders.contains(mygroupfolder.getFolder(ploneGroupFolder))){
+		/**if(groupFolders.contains(mygroupfolder.getFolder(ploneGroupFolder))){
 			mygroupfolder = mygroupfolder.getFolder(ploneGroupFolder);
+		}*/
+		for(int i =0; i<groupFolders.size(); i++ ){
+			if(groupFolders.get(i).getFolderPath().equals(mygroupfolder.getFolder(ploneGroupFolder).getFolderPath())){
+				mygroupfolder = groupFolders.get(i);
+				break;
+			}
 		}
 
 		/** no userfolder needed
@@ -183,9 +189,10 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		properties.put("scenarios",scenarios);
 
 		//getting the dokpool metainformation by tagname
+		//TODO activate dokpoolname and dokpoolfolder
 		Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
-		Element dokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
-		Element dokpoolfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLFOLDER);
+		//Element dokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
+		//Element dokpoolfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLFOLDER);
 		Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
 		Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
 		Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
@@ -198,8 +205,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
 
 		properties.put("subjects", new String[]{purpose.getTextContent(),
-												dokpoolname.getTextContent(),
-												dokpoolfolder.getTextContent(),
+												//dokpoolname.getTextContent(),
+												//dokpoolfolder.getTextContent(),
 												network.getTextContent(),
 												stid.getTextContent(),
 												st.getTextContent(),
