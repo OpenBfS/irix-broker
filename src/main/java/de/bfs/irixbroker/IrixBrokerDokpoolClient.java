@@ -162,7 +162,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 			mygroupfolder = mygroupfolder.getFolder(ploneGroupFolder);
 		}*/
 		for(int i =0; i<groupFolders.size(); i++ ){
-			if(groupFolders.get(i).getFolderPath().equals(mygroupfolder.getFolder(ploneGroupFolder).getFolderPath())){
+			if(groupFolders.get(i).getFolderPath().toString().equals(mygroupfolder.getFolder(ploneGroupFolder).getFolderPath().toString())){
 				mygroupfolder = groupFolders.get(i);
 				break;
 			}
