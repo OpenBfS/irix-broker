@@ -152,15 +152,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		//connect to wsapi4plone
 		DocpoolBaseService dokpool = new DocpoolBaseService(proto+"://"+host+":"+port+"/"+ploneSite,user,pw);
 
-		//TODO use primaryDokpool (of irixauto) or configuration file?
+		//TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
 		DocumentPool mydokpool = dokpool.getPrimaryDocumentPool();
 		List<Folder> groupFolders = mydokpool.getGroupFolders();
 		List <DocumentPool> mydokpools = dokpool.getDocumentPools();
 		Folder mygroupfolder = mydokpool.getGroupFolders().get(0);
-		//change groupfolder to configured ploneGroupFolder
-		/**if(groupFolders.contains(mygroupfolder.getFolder(ploneGroupFolder))){
-			mygroupfolder = mygroupfolder.getFolder(ploneGroupFolder);
-		}*/
 		for(int i =0; i<groupFolders.size(); i++ ){
 			if(groupFolders.get(i).getFolderPath().equals(mygroupfolder.getFolder(ploneGroupFolder).getFolderPath())){
 				mygroupfolder = groupFolders.get(i);
