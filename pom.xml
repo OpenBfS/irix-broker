@@ -51,7 +51,7 @@
         <dependency>
             <groupId>de.bfs</groupId>
             <artifactId>dokpool-client</artifactId>
-            <version>1.0.0-RC1</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
