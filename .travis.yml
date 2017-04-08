@@ -6,6 +6,7 @@ cache:
 language: java
 before_install:
   - rm ~/.m2/settings.xml
+  - pwd
   - cd ~ && git clone https://github.com/OpenBfS/dokpool-javaclient.git && cd dokpool-javaclient && mvn clean install && cd -
 script:
   - mvn clean compile package install
