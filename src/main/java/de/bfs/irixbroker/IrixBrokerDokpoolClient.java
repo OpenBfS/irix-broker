@@ -154,23 +154,50 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
 		//TODO use primaryDokpool (of irixauto) or configuration file?
 		DocumentPool mydokpool = dokpool.getPrimaryDocumentPool();
-		List<Folder> groupFolders = mydokpool.getGroupFolders();
 		List <DocumentPool> mydokpools = dokpool.getDocumentPools();
-		Folder mygroupfolder = mydokpool.getGroupFolders().get(0);
-		//change groupfolder to configured ploneGroupFolder
-		/**if(groupFolders.contains(mygroupfolder.getFolder(ploneGroupFolder))){
-			mygroupfolder = mygroupfolder.getFolder(ploneGroupFolder);
-		}*/
-		for(int i =0; i<groupFolders.size(); i++ ){
-			if(groupFolders.get(i).getFolderPath().equals(mygroupfolder.getFolder(ploneGroupFolder).getFolderPath())){
-				mygroupfolder = groupFolders.get(i);
-				break;
+		Element mydokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
+		Boolean renewdokpool = true;
+		if (renewdokpool && (mydokpoolname != null)){
+			for (DocumentPool sdokpool : mydokpools) {
+				if (sdokpool.getFolderPath().matches("/" + ploneSite + "/"+mydokpoolname.getTextContent())){
+					mydokpool = sdokpool;
+					renewdokpool = false;
+				}
+			}
+		}
+		if (renewdokpool) {
+			for (DocumentPool sdokpool : mydokpools) {
+				if (sdokpool.getFolderPath().matches("/" + ploneSite + "/"+ploneDokpool)){
+					mydokpool = sdokpool;
+				}
 			}
 		}
 
-		/** no userfolder needed
-		 Folder userfolder = mydokpool.getUserFolder();
-		 */
+		List<Folder> groupFolders = mydokpool.getGroupFolders();
+		Boolean renewgroupfolder = true;
+		Element mydokpoolgroupfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
+		Folder mygroupfolder = null;
+		if (mydokpoolgroupfolder != null){
+			for (Folder groupFolder : groupFolders) {
+				if (groupFolder.getFolderPath().matches("/" + ploneSite + "/"+ploneDokpool+"/content/Groups/"+ploneGroupFolder)){
+					mygroupfolder = groupFolder;
+					renewgroupfolder = false;
+					break;
+				}
+			}
+		}
+		if (renewgroupfolder){
+			for (Folder groupFolder : groupFolders) {
+				if (groupFolder.getFolderPath().matches("/" + ploneSite + "/"+ploneDokpool+"/content/Groups/"+ploneGroupFolder)){
+					mygroupfolder = groupFolder;
+					renewgroupfolder = false;
+					break;
+				}
+			}
+		}
+		if (renewgroupfolder && (mydokpools.size() > 0)){
+			mygroupfolder = mydokpool.getGroupFolders().get(0);
+		}
 
 		/** point the new Dokument to all scenarios of the dokpool
 		 *
@@ -183,7 +210,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("title",title);
 		properties.put("description",desc);
-		properties.put("text","<b>eingestellt via WebGis-Klient</b>");
+		properties.put("text","<b>eingestellt durch IRIX-Broker</b>");
 		Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
 		properties.put("docType",dt.getTextContent());
 		properties.put("scenarios",scenarios);
@@ -191,8 +218,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		//getting the dokpool metainformation by tagname
 		//TODO activate dokpoolname and dokpoolfolder
 		Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
-		//Element dokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
-		//Element dokpoolfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLFOLDER);
 		Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
 		Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
 		Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
@@ -205,8 +230,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
 
 		properties.put("subjects", new String[]{purpose.getTextContent(),
-												//dokpoolname.getTextContent(),
-												//dokpoolfolder.getTextContent(),
 												network.getTextContent(),
 												stid.getTextContent(),
 												st.getTextContent(),

@@ -8,7 +8,9 @@ public interface IrixBrokerDokpoolXMLNames {
 	// Tag-Namen
 	String TAG_PURPOSE ="Purpose";
 	String TAG_DOKPOOLNAME = "DokpoolName";
-	String TAG_DOKPOOLFOLDER = "DokpoolFolder";
+	String TAG_DOKPOOLGROUPFOLDER = "DokpoolGroupFolder";
+	String TAG_DOKPOOLPRIVATEFOLDER = "DokpoolPrivateFolder";
+	String TAG_DOKPOOLTRANSFERFOLDER = "DokpoolTransferFolder";
 	String TAG_DOKPOOLCONTENTTYPE ="DokpoolContentType";
 	String TAG_ISELAN = "IsElan";
 	String TAG_ISDOKSYS = "IsDoksys";
