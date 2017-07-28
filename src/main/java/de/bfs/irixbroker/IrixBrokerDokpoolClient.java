@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.Properties;
 
+import java.lang.NullPointerException;
+
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.iaea._2012.irix.format.ReportType;
@@ -177,26 +179,30 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Boolean renewgroupfolder = true;
 		Element mydokpoolgroupfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
 		Folder mygroupfolder = null;
-		if (mydokpoolgroupfolder != null){
-			for (Folder groupFolder : groupFolders) {
-				if (groupFolder.getFolderPath().matches("/" + ploneSite + "/"+ploneDokpool+"/content/Groups/"+ploneGroupFolder)){
-					mygroupfolder = groupFolder;
-					renewgroupfolder = false;
-					break;
-				}
-			}
-		}
+                try {
+                    mygroupfolder = mydokpool.getFolder( ploneSite+"/"+ploneDokpool+"/content/Groups/"+mydokpoolgroupfolder.getTextContent() );
+		    renewgroupfolder = false;
+		} catch (NullPointerException e) {
+                    // It's fine not to find a groufolder here
+                    // TODO give warning falling back to system configuration for import
+                    System.out.println("[WARNING] Could not find Groupfolder: " + mydokpoolgroupfolder.getTextContent() + ". Trying systemdefined Groupfolder.");
+                }
 		if (renewgroupfolder){
-			for (Folder groupFolder : groupFolders) {
-				if (groupFolder.getFolderPath().matches("/" + ploneSite + "/"+ploneDokpool+"/content/Groups/"+ploneGroupFolder)){
-					mygroupfolder = groupFolder;
-					renewgroupfolder = false;
-					break;
-				}
-			}
+                    try {
+                        mygroupfolder = mydokpool.getFolder( ploneSite+"/"+ploneDokpool+"/content/Groups/"+ploneGroupFolder );
+		        renewgroupfolder = false;
+		    } catch (NullPointerException e) {
+                        // It's fine not to find a groufolder here but suspicious
+                        // TODO give warning falling back to first available groupfolder for import
+                        System.out.println("[WARNING] Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groufolder.");
+                    }
 		}
 		if (renewgroupfolder && (mydokpools.size() > 0)){
+                    try {
 			mygroupfolder = mydokpool.getGroupFolders().get(0);
+                    } catch (NullPointerException e) {
+                        throw new NullPointerException("Could not find a valid GroupFolder");
+                    }
 		}
 
 		/** point the new Dokument to all scenarios of the dokpool
