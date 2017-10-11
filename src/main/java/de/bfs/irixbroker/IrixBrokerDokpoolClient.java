@@ -205,15 +205,22 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                     }
 		}
 
-		/** point the new Dokument to all scenarios of the dokpool
+		/** point the new Dokument to active or referenced scenarios of the dokpool
 		 *
 		 */
-		getScenariosfromDokpool(mydokpool);
+                //TODO support list of scenarios and properties settings as well!
+                Element mydokpoolscenario = extractSingleElement(dokpoolmeta, TAG_ELANSCENARIO);
+		if ( mydokpoolscenario != null ) {
+			addScenariofromDokpool(mydokpool, mydokpoolscenario.getTextContent());
+		} else {
+			addActiveScenariosfromDokpool(mydokpool);
+		}
 		
 		/** hashmap to store the dokpool meta data
 		 *
 		 */
 		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, String> dokpoolProperties = new HashMap<String, String>();
 		properties.put("title",title);
 		properties.put("description",desc);
 		properties.put("text","<b>eingestellt durch IRIX-Broker</b>");
@@ -247,6 +254,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 												sbegin.getTextContent(),
 												send.getTextContent()});
 
+		dokpoolProperties.put("purpose", purpose.getTextContent());
+		dokpoolProperties.put("dom", dom.getTextContent());
+		dokpoolProperties.put("lbase", lbase.getTextContent());
+		dokpoolProperties.put("sbegin", sbegin.getTextContent());
+		dokpoolProperties.put("status", status.getTextContent());
+
 		Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
 		if(elan.getTextContent().equalsIgnoreCase("true")){
 			properties.put("local_behaviors", new String[]{"elan"});
@@ -273,6 +286,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
 		Document d = mygroupfolder.createDocument(ReportId, properties);
 		System.out.println(d.getTitle());
+		for (String key : dokpoolProperties.keySet()){
+			d.setProperty(key, dokpoolProperties.get(key), "string");
+		}
 
 		for(int i =0; i<fet.size(); i++ )
 		{
@@ -305,13 +321,40 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		return success;
 	}
 
-	public void getScenariosfromDokpool(DocumentPool dp){
+	public void addScenariosfromDokpool(DocumentPool dp){
 
 		List<Scenario> scen = dp.getScenarios();
 		String [] sc = new String [scen.size()];
 		for (int i = 0; i<scen.size();i++)
 			sc[i]=scen.get(i).getId();
+		setScenarios(sc);
+	}
 
+	public void addActiveScenariosfromDokpool(DocumentPool dp){
+
+		List<Scenario> scen = dp.getScenarios();
+		String [] sc = new String [scen.size()];
+		for (int i = 0; i<scen.size();i++){
+			String stat=scen.get(i).getStringAttribute("status");
+			if(stat.equals("active"))
+				sc[i]=scen.get(i).getId();
+		}
+		setScenarios(sc);
+	}
+
+	public void addScenariofromDokpool(DocumentPool dp, String myscenario){
+
+		List<Scenario> scen = dp.getScenarios();
+		String [] sc = new String [scen.size()];
+		for (int i = 0; i<scen.size();i++){
+			String stat=scen.get(i).getId();
+			if(scen.get(i).getId().equals(myscenario)) {
+				sc[i] = scen.get(i).getId();
+			}
+		}
+		if ( sc.length == 0 ){
+			sc[0] = "routinemode";
+		}
 		setScenarios(sc);
 	}
 	
