@@ -5,11 +5,7 @@
 
 package de.bfs.irixbroker;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.*;
 
 import java.lang.NullPointerException;
 
@@ -208,12 +204,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		/** point the new Dokument to active or referenced scenarios of the dokpool
 		 *
 		 */
-                //TODO support list of scenarios and properties settings as well!
-                Element mydokpoolscenario = extractSingleElement(dokpoolmeta, TAG_ELANSCENARIO);
-		if ( mydokpoolscenario != null ) {
-			addScenariofromDokpool(mydokpool, mydokpoolscenario.getTextContent());
+		//TODO support list of scenarios and properties settings as well!
+		Element mydokpoolscenarios = extractSingleElement(dokpoolmeta, TAG_ELANSCENARIOS);
+		if ( mydokpoolscenarios != null ) {
+			NodeList mydokpoolscenariolist = mydokpoolscenarios.getElementsByTagName(TAG_ELANSCENARIO);
+			List<String> sclist = new ArrayList<String>();
+			for ( int i =0; i<mydokpoolscenariolist.getLength(); i++ ) {
+				sclist.add(mydokpoolscenariolist.item(i).getTextContent());
+			}
+			//addScenariosfromDokpool(mydokpool, mydokpoolscenarios.getTextContent());
+			addScenariosfromDokpool(mydokpool, sclist);
 		} else {
-			addActiveScenariosfromDokpool(mydokpool);
+		    addActiveScenariosfromDokpool(mydokpool);
 		}
 		
 		/** hashmap to store the dokpool meta data
@@ -342,13 +344,27 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		setScenarios(sc);
 	}
 
-	public void addScenariofromDokpool(DocumentPool dp, String myscenario){
+	public void addScenariosfromDokpool(DocumentPool dp, String myscenario){
 
 		List<Scenario> scen = dp.getScenarios();
 		String [] sc = new String [scen.size()];
 		for (int i = 0; i<scen.size();i++){
-			String stat=scen.get(i).getId();
 			if(scen.get(i).getId().equals(myscenario)) {
+				sc[i] = scen.get(i).getId();
+			}
+		}
+		if ( sc.length == 0 ){
+			sc[0] = "routinemode";
+		}
+		setScenarios(sc);
+	}
+
+	public void addScenariosfromDokpool(DocumentPool dp, List<String> myscenarios){
+
+		List<Scenario> scen = dp.getScenarios();
+		String [] sc = new String [scen.size()];
+		for (int i = 0; i<scen.size();i++){
+			if (myscenarios.contains(scen.get(i).getId())){
 				sc[i] = scen.get(i).getId();
 			}
 		}
