@@ -245,16 +245,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
 
 		properties.put("subjects", new String[]{purpose.getTextContent(),
-												network.getTextContent(),
-												stid.getTextContent(),
-												st.getTextContent(),
-												dom.getTextContent(),
-												dtype.getTextContent(),
-												lbase.getTextContent(),
-												mp.getTextContent(),
-												status.getTextContent(),
-												sbegin.getTextContent(),
-												send.getTextContent()});
+			network.getTextContent(),
+			stid.getTextContent(),
+			st.getTextContent(),
+			dom.getTextContent(),
+			dtype.getTextContent(),
+			lbase.getTextContent(),
+			mp.getTextContent(),
+			status.getTextContent(),
+			sbegin.getTextContent(),
+			send.getTextContent()});
 
 		dokpoolProperties.put("purpose", purpose.getTextContent());
 		dokpoolProperties.put("dom", dom.getTextContent());
@@ -362,16 +362,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	public void addScenariosfromDokpool(DocumentPool dp, List<String> myscenarios){
 
 		List<Scenario> scen = dp.getScenarios();
-		String [] sc = new String [scen.size()];
+		ArrayList<String> sc = new ArrayList<String>();
 		for (int i = 0; i<scen.size();i++){
-			if (myscenarios.contains(scen.get(i).getId())){
-				sc[i] = scen.get(i).getId();
-			}
+		    if (myscenarios.contains(scen.get(i).getId())){
+                        sc.add(scen.get(i).getId());
+		    }
 		}
-		if ( sc.length == 0 ){
-			sc[0] = "routinemode";
+		if ( sc.size() == 0 ){
+		    sc.add( "routinemode" );
 		}
-		setScenarios(sc);
+		setScenarios(sc.toArray((new String[sc.size()])));
 	}
 	
 	public String getOrganisationReporting() {
