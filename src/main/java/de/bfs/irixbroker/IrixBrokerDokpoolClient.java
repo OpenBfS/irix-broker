@@ -39,7 +39,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 	private List<AnnotationType> annot;
 	private List<FileEnclosureType> fet;
 	private String title;
-	private String main_text="empty";
+	private String main_text="<b>eingestellt durch IRIX-Broker</b>";
 	private String ReportId;
 	private Element dokpoolmeta; //DOM Element with the full dokpoolmeta information
 	private Properties bfsIrixBrokerProperties;
@@ -225,12 +225,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Map<String, String> dokpoolProperties = new HashMap<String, String>();
 		properties.put("title",title);
 		properties.put("description",desc);
-		if ( main_text ){
-			properties.put("text", main_text);
-		}
-		else {
-			properties.put("text","<b>eingestellt durch IRIX-Broker</b>");
-		}
+                properties.put("text", main_text);
 		Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
 		properties.put("docType",dt.getTextContent());
 		properties.put("scenarios",scenarios);
