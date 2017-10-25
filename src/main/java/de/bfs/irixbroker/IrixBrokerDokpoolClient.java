@@ -225,7 +225,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		Map<String, String> dokpoolProperties = new HashMap<String, String>();
 		properties.put("title",title);
 		properties.put("description",desc);
-		properties.put("text","<b>eingestellt durch IRIX-Broker</b>");
+		if ( main_text ){
+			properties.put("text", main_text);
+		}
+		else {
+			properties.put("text","<b>eingestellt durch IRIX-Broker</b>");
+		}
 		Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
 		properties.put("docType",dt.getTextContent());
 		properties.put("scenarios",scenarios);
