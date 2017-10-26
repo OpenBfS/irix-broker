@@ -5,7 +5,7 @@
     <groupId>de.bfs</groupId>
     <artifactId>bfs-irixbroker</artifactId>
     <packaging>jar</packaging>
-    <version>1.4.1</version>
+    <version>1.4-SNAPHOT</version>
     <name>BfS broker to extend irix-webservice</name>
     <organization>
         <name>German Federal Office for Radiation Protection</name>
