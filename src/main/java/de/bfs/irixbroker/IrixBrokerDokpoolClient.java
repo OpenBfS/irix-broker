@@ -17,6 +17,7 @@ import org.iaea._2012.irix.format.annexes.AnnotationType;
 import org.iaea._2012.irix.format.annexes.FileEnclosureType;
 import org.iaea._2012.irix.format.identification.EventIdentificationType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
+import org.iaea._2012.irix.format.eventinformation.EventInformationType;
 
 import de.bfs.dokpool.client.Document;
 import de.bfs.dokpool.client.DocumentPool;
@@ -28,14 +29,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
-	
+
 	private String OrganisationReporting;
 	private XMLGregorianCalendar DateTime;
 	private String ReportContext;
 	private String Confidentiality="Free for Public Use";
 	private String scenario = "routinemode"; //first element from List EventIdentification
 	private String[] scenarios = {scenario}; //first element from List EventIdentification
-	
+
 	private List<AnnotationType> annot;
 	private List<FileEnclosureType> fet;
 	private String title;
@@ -56,12 +57,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		success = false;
 
 		success = readIdentification(report.getIdentification());
-		success = readAnnexes(report.getAnnexes());
-
+		if (report.getEventInformation() != null) {
+			success = readEventInformation(report.getEventInformation());
+			System.out.println("EventInformation found. Ignoring Annexes!");
+		} else if (report.getAnnexes() != null) {
+			success = readAnnexes(report.getAnnexes());
+			System.out.println("Annexes found.");
+		}
 		success = DocPoolClient();
 		return success;
 	}
-	
+
 	private boolean readIdentification(IdentificationType ident)
 	{
 		boolean success=true;
@@ -87,10 +93,25 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 				System.out.println("eventidentification filled");
 			}
 		}
-		
+
 		return success;
 	}
-	
+
+
+	private boolean readEventInformation(EventInformationType event)
+	{
+		boolean success=true;
+
+		/*setOrganisationReporting(ident.getOrganisationReporting());
+		setDateTime(ident.getDateAndTimeOfCreation());
+		if(ident.getConfidentiality() != null) {
+			setConfidentiality(ident.getConfidentiality().value());
+		}
+		setReportId(ident.getReportUUID());*/
+
+		return success;
+	}
+
 	private boolean readAnnexes(AnnexesType annex)
 	{
 		boolean success=true;
@@ -98,9 +119,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		 * information for ELAN is only valid if there is one annotation with title and annotation text and file attachment
 		 * or title and enclosed file attachments. You need a file attachment because the Information Category is only in this element.
 		 */
-		
+
 		setAnnot(annex.getAnnotation());
-		
+
 		if(annot.isEmpty())
 		{
 			success=false;
@@ -116,7 +137,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 			List<Element> el = annot.get(0).getAny();
 			dokpoolmeta = el.get(0);
 
-			
+
 		}
 		//get the attached files
 		setFet(annex.getFileEnclosure());
@@ -131,7 +152,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		d.setWorkflowStatus("publish");
 		return true;
 	}
-	
+
 	private boolean DocPoolClient()
 	{
 		success = true;
@@ -144,9 +165,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		String ploneGroupFolder=bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
 		String user=bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
 		String pw=bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
-		
+
 		String desc="Original date: "+DateTime.toString()+" "+ReportContext+ " "+ Confidentiality;
-		
+
 		//connect to wsapi4plone
 		DocpoolBaseService dokpool = new DocpoolBaseService(proto+"://"+host+":"+port+"/"+ploneSite,user,pw);
 
@@ -217,7 +238,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		} else {
 		    addActiveScenariosfromDokpool(mydokpool);
 		}
-		
+
 		/** hashmap to store the dokpool meta data
 		 *
 		 */
@@ -373,7 +394,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		}
 		setScenarios(sc.toArray((new String[sc.size()])));
 	}
-	
+
 	public String getOrganisationReporting() {
 		return OrganisationReporting;
 	}
