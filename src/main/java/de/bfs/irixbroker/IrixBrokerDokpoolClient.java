@@ -77,12 +77,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         if (ident.getEventIdentifications() != null) {
             eid = ident.getEventIdentifications().getEventIdentification();
             if (eid.isEmpty()) {
-                System.out.println("No eventidentification found!!");
+                log.warn("No eventidentification found!!");
                 setScenario(scenario);
                 success = false;
             } else {
                 setScenario(eid.get(0).getValue());
-                System.out.println("eventidentification filled");
+                log.debug("eventidentification filled");
             }
         }
 
@@ -105,12 +105,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             if (annot.get(0).getText().getContent().size() > 0) {
                 setMain_text((String) annot.get(0).getText().getContent().get(0));
             }
-
             // get the DokPool Meta data
             List<Element> el = annot.get(0).getAny();
             dokpoolmeta = el.get(0);
-
-
         }
         //get the attached files
         setFet(annex.getFileEnclosure());
@@ -125,114 +122,147 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return true;
     }
 
-    private DocumentPool getMydokpool(DocpoolBaseService dokpoolBaseService, List<DocumentPool> mysokpools) {
-
+    private DocumentPool getMydokpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools) {
+        //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
-        DocumentPool mydokpool = dokpoolBaseService.getPrimaryDocumentPool();
-        List<DocumentPool> mydokpools = dokpoolBaseService.getDocumentPools();
+        DocumentPool myDocpool = docpoolBaseService.getPrimaryDocumentPool();
         Element mydokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
         Boolean renewdokpool = true;
         if (renewdokpool && (mydokpoolname != null)) {
-            for (DocumentPool sdokpool : mydokpools) {
+            for (DocumentPool sdokpool : myDocpools) {
                 if (sdokpool.getFolderPath().matches("/" + ploneSite + "/" + mydokpoolname.getTextContent())) {
-                    mydokpool = sdokpool;
+                    myDocpool = sdokpool;
                     renewdokpool = false;
                 }
             }
         }
         if (renewdokpool) {
-            for (DocumentPool sdokpool : mydokpools) {
+            for (DocumentPool sdokpool : myDocpools) {
                 if (sdokpool.getFolderPath().matches("/" + ploneSite + "/" + ploneDokpool)) {
-                    mydokpool = sdokpool;
+                    myDocpool = sdokpool;
                 }
             }
         }
 
-        return mydokpool;
-
+        return myDocpool;
     }
 
-    private boolean DocPoolClient() {
-        success = true;
-
-        String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
-        String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
-        String port = bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
+    private Folder getMyGroupFolder(DocpoolBaseService docpoolBaseService, DocumentPool myDocpool) {
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
         String ploneGroupFolder = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
-        String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
-        String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
 
-        String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
-
-        //connect to Dokpool using API (wsapi4plone/wsapi4elan)
-        DocpoolBaseService dokpoolBaseService = new DocpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
-
-        //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
-        List<DocumentPool> mydokpools = dokpoolBaseService.getDocumentPools();
-        DocumentPool mydokpool = getMydokpool(dokpoolBaseService, mydokpools);
-
-        List<Folder> groupFolders = mydokpool.getGroupFolders();
-        Boolean renewgroupfolder = true;
-        Element mydokpoolgroupfolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
-        Folder mygroupfolder = null;
+        Boolean renewGroupFolder = true;
+        Element myDocpoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
+        List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
+        Folder myGroupFolder = null;
         try {
-            mygroupfolder = mydokpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + mydokpoolgroupfolder.getTextContent());
-            renewgroupfolder = false;
+            myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
+            renewGroupFolder = false;
         } catch (NullPointerException e) {
             // It's fine not to find a groufolder here
             // TODO give warning falling back to system configuration for import
-            System.out.println("[WARNING] Could not find Groupfolder: " + mydokpoolgroupfolder.getTextContent() + ". Trying systemdefined Groupfolder.");
+            log.warn("Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
         }
-        if (renewgroupfolder) {
+        if (renewGroupFolder) {
             try {
-                mygroupfolder = mydokpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + ploneGroupFolder);
-                renewgroupfolder = false;
+                myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + ploneGroupFolder);
+                renewGroupFolder = false;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here but suspicious
                 // TODO give warning falling back to first available groupfolder for import
-                System.out.println("[WARNING] Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groufolder.");
+                log.warn("Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groufolder.");
             }
         }
-        if (renewgroupfolder && (mydokpools.size() > 0)) {
+        if (renewGroupFolder && (myDocpools.size() > 0)) {
             try {
-                mygroupfolder = mydokpool.getGroupFolders().get(0);
+                myGroupFolder = myDocpool.getGroupFolders().get(0);
             } catch (NullPointerException e) {
                 throw new NullPointerException("Could not find a valid GroupFolder");
             }
         }
 
-        /** point the new Dokument to active or referenced scenarios of the dokpool
-         *
-         */
-        //TODO support list of scenarios and properties settings as well!
-        Element mydokpoolscenarios = extractSingleElement(dokpoolmeta, TAG_ELANSCENARIOS);
-        if (mydokpoolscenarios != null) {
-            NodeList mydokpoolscenariolist = mydokpoolscenarios.getElementsByTagName(TAG_ELANSCENARIO);
-            List<String> sclist = new ArrayList<String>();
-            for (int i = 0; i < mydokpoolscenariolist.getLength(); i++) {
-                sclist.add(mydokpoolscenariolist.item(i).getTextContent());
+        return myGroupFolder;
+    }
+
+    private Map<String, Object> setBehaviors() {
+        //TODO check if Dokpool supports behaviours before adding them
+        Map<String, Object> properties = new HashMap<String, Object>();
+        List<String> behaviorsList = new ArrayList<String>();
+        String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
+
+        for (String behaviorTag : behaviorsTagList) {
+            Element element = extractSingleElement(dokpoolmeta, behaviorTag);
+            if (element.getTextContent().equalsIgnoreCase("true")) {
+                behaviorsList.add(element.getTagName().replaceFirst("^Is", "").toLowerCase());
             }
-            //addScenariosfromDokpool(mydokpool, mydokpoolscenarios.getTextContent());
-            addScenariosfromDokpool(mydokpool, sclist);
-        } else {
-            addActiveScenariosfromDokpool(mydokpool);
         }
 
-        /** hashmap to store the dokpool meta data
-         *
-         */
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> dokpoolProperties = new HashMap<String, Object>();
-        properties.put("title", title);
-        properties.put("description", desc);
-        properties.put("text", main_text);
-        Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
-        properties.put("docType", dt.getTextContent());
+        /*Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
+        if (elan.getTextContent().equalsIgnoreCase("true")) {
+            behaviorsList.add("elan");
+            //properties.put("scenarios",scenarios);
+            //d.update(new HashMap<String, Object>("scenarios", scenarios));
+            //TODO other elan specific properties must be added later
+        }
+        Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
+        if (rodos.getTextContent().equalsIgnoreCase("true")) {
+            behaviorsList.add("rodos");
+        }
+        Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
+        if (rei.getTextContent().equalsIgnoreCase("true")) {
+            behaviorsList.add("rei");
+        }
 
+        Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
+        if (doksys.getTextContent().equalsIgnoreCase("true")) {
+            behaviorsList.add("doksys");
+        }*/
+
+        if (behaviorsList.size() > 0) {
+            properties.put("local_behaviors", behaviorsList);
+        }
+        return properties;
+    }
+
+
+
+    private Map<String, Object> setSubjects(){
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
+        Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
+        Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
+        Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
+        Element dom = extractSingleElement(dokpoolmeta, TAG_DOM);
+        Element dtype = extractSingleElement(dokpoolmeta, TAG_DATATYPE);
+        Element lbase = extractSingleElement(dokpoolmeta, TAG_LEGALBASE);
+        Element mp = extractSingleElement(dokpoolmeta, TAG_MEASURINGPROGRAM);
+        Element status = extractSingleElement(dokpoolmeta, TAG_STATUS);
+        Element sbegin = extractSingleElement(dokpoolmeta, TAG_SAMPLINGBEGIN);
+        Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
+
+        properties.put("subjects", new String[]{
+                "SubjectTest von lem-fr",
+                purpose.getTextContent(),
+                network.getTextContent(),
+                stid.getTextContent(),
+                st.getTextContent(),
+                dom.getTextContent(),
+                dtype.getTextContent(),
+                lbase.getTextContent(),
+                mp.getTextContent(),
+                status.getTextContent(),
+                sbegin.getTextContent(),
+                send.getTextContent()
+        });
+
+        return properties;
+    }
+
+    private Map<String, Object> setDoksysProperties(){
+        Map<String, Object> doksysProperties = new HashMap<String, Object>();
         //getting the dokpool metainformation by tagname
         //TODO activate dokpoolname and dokpoolfolder
         Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
@@ -247,93 +277,131 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element sbegin = extractSingleElement(dokpoolmeta, TAG_SAMPLINGBEGIN);
         Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
 
-        properties.put("subjects", new String[]{purpose.getTextContent(),
-                network.getTextContent(),
-                stid.getTextContent(),
-                st.getTextContent(),
-                dom.getTextContent(),
-                dtype.getTextContent(),
-                lbase.getTextContent(),
-                mp.getTextContent(),
-                status.getTextContent(),
-                sbegin.getTextContent(),
-                send.getTextContent()});
+        doksysProperties.put("purpose", purpose.getTextContent());
+        doksysProperties.put("dom", dom.getTextContent());
+        doksysProperties.put("lbase", lbase.getTextContent());
+        doksysProperties.put("sbegin", sbegin.getTextContent());
+        doksysProperties.put("status", status.getTextContent());
+        return doksysProperties;
+    }
 
-        dokpoolProperties.put("purpose", purpose.getTextContent());
-        dokpoolProperties.put("dom", dom.getTextContent());
-        dokpoolProperties.put("lbase", lbase.getTextContent());
-        dokpoolProperties.put("sbegin", sbegin.getTextContent());
-        dokpoolProperties.put("status", status.getTextContent());
-
-        //TODO check if Dokpool supports behaviours before adding them
-        List<String> behaviorlist = new ArrayList<String>();
-        Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
-        if (elan.getTextContent().equalsIgnoreCase("true")) {
-            //properties.put("local_behaviors", new String[]{"elan"});
-            behaviorlist.add("elan");
-            //properties.put("scenarios",scenarios);
-            //d.update(new HashMap<String, Object>("scenarios", scenarios));
-            //TODO other elan specific properties must be added later
+    private Map<String, Object> setElanProperties(DocumentPool myDocpool){
+        /** point the new Dokument to active or referenced scenarios of the dokpool
+         *
+         */
+        //TODO support list of scenarios and properties settings as well!
+        Map<String, Object> elanProperties = new HashMap<String, Object>();
+        Element myElanScenarios = extractSingleElement(dokpoolmeta, TAG_ELANSCENARIOS);
+        if (myElanScenarios != null) {
+            NodeList myElanScenarioList = myElanScenarios.getElementsByTagName(TAG_ELANSCENARIO);
+            List<String> sclist = new ArrayList<String>();
+            for (int i = 0; i < myElanScenarioList.getLength(); i++) {
+                sclist.add(myElanScenarioList.item(i).getTextContent());
+            }
+            //addScenariosfromDokpool(mydokpool, mydokpoolscenarios.getTextContent());
+            addScenariosfromDokpool(myDocpool, sclist);
+        } else {
+            addActiveScenariosfromDokpool(myDocpool);
         }
+        elanProperties.put("scenarios", scenarios);
 
-        Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
-        if (rodos.getTextContent().equalsIgnoreCase("true")) {
-            //System.out.println("[INFO] RODOS behavior not yet available in Dokpool. Ignoring!");
-            //properties.put("local_behaviors", new String[]{"rodos"});
-            behaviorlist.add("rodos");
-        }
+        return elanProperties;
+    }
 
-        Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
-        if (rei.getTextContent().equalsIgnoreCase("true")) {
-            //System.out.println("[INFO] REI behavior not yet available in Dokpool. Ignoring!");
-            //properties.put("local_behaviors", new String[]{"rei"});
-            behaviorlist.add("rei");
-        }
+    private Map<String, Object> setRodosProperties(){
+        Map<String, Object> rodosProperties = new HashMap<String, Object>();
+        return rodosProperties;
+    }
 
+    private Map<String, Object> setReiProperties(){
+        Map<String, Object> reiProperties = new HashMap<String, Object>();
+        return reiProperties;
+    }
+
+    private boolean DocPoolClient() {
+        success = true;
+
+        String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
+        String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
+        String port = bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
+        String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
+        String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
+        String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
+
+        String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
+
+        //connect to Dokpool using API (wsapi4plone/wsapi4elan)
+        DocpoolBaseService docpoolBaseService = new DocpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
+
+        // DocumentPool
+        List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
+        DocumentPool myDocpool = getMydokpool(docpoolBaseService, myDocpools);
+
+        //GroupFolder
+        List<Folder> groupFolders = myDocpool.getGroupFolders();
+        Folder myGroupFolder = getMyGroupFolder(docpoolBaseService, myDocpool);
+
+        /** hashmap to store the generic dokpool meta data
+         *
+         */
+        Map<String, Object> docpoolProperties = new HashMap<String, Object>();
+        docpoolProperties.put("title", title);
+        docpoolProperties.put("description", desc);
+        docpoolProperties.put("text", main_text);
+        Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
+        docpoolProperties.put("docType", dt.getTextContent());
+        docpoolProperties.putAll(setBehaviors());
+
+        Document d = myGroupFolder.createDocument(ReportId, docpoolProperties);
+        log.info(d.getTitle());
+
+        // updating document with generic (docpool) properties
+        d.update(setSubjects());
+
+        // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys.getTextContent().equalsIgnoreCase("true")) {
-            //System.out.println("[INFO] DOKSYS behavior not yet available in Dokpool. Ignoring!");
-            //properties.put("local_behaviors", new String[]{"doksys"});
-            behaviorlist.add("doksys");
+            d.update(setDoksysProperties());
+            //FIXME  may be for loop needed here?
+            /*for (FOO key : doksysProperties.keySet()) {
+                //d.setProperty(key, dokpoolProperties.get(key), "string");
+                d.update(doksysProperty);
+            }*/
         }
-        if (behaviorlist.size() > 0) {
-            properties.put("local_behaviors", behaviorlist);
+        // updating document with elan specific properties
+        Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
+        if (elan.getTextContent().equalsIgnoreCase("true")) {
+            d.update(setElanProperties(myDocpool));
+            //TODO other elan specific properties must be added later
         }
-        Document d = mygroupfolder.createDocument(ReportId, properties);
-        Map<String, Object> scenariomap = new HashMap<String, Object>();
-        scenariomap.put("scenarios", scenarios);
-        d.update(scenariomap);
-
-//		Document d = mygroupfolder.createDocument(ReportId, properties);
-        System.out.println(d.getTitle());
-        for (String key : dokpoolProperties.keySet()) {
-            //d.setProperty(key, dokpoolProperties.get(key), "string");
-            d.update(dokpoolProperties);
-
+        // updating document with elan specific properties
+        Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
+        if (rodos.getTextContent().equalsIgnoreCase("true")) {
+            d.update(setRodosProperties());
+        }
+        // updating document with rei specific properties
+        Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
+        if (rei.getTextContent().equalsIgnoreCase("true")) {
+            d.update(setReiProperties());
         }
 
-        //TODO add behavior specific properties after document creation
-
+        // add attachements
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
-            System.out.println("Anhang" + i + ": " + t);
             //FIXME path generation URL consistent!!
-
+            String aid = fet.get(i).getFileName();
+            log.info("Anhang" + i + ": " + t);
             if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
-                String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
                 d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
             }
             // TODO separate handling of movie files
             else if (MT_MOVIES.contains(fet.get(i).getMimeType())) {
-                String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
                 d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
             } else {
-                String aid = fet.get(i).getFileName(); //object-id is filename - needed from template simpleviz
                 d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
             }
-
-
         }
+
         if (Confidentiality.equals(ID_CONF)) {
             publish(d);
         }

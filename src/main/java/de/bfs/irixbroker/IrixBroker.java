@@ -82,8 +82,7 @@ public class IrixBroker {
             bases = base.getReportingBasis();
 
             if (bases.isEmpty()) {
-                System.out.println("No reporting bases!");
-                System.exit(-2);
+                throw new IrixBrokerException( "No reporting bases found.", new Throwable("No reporting bases found."));
             }
             for (int i = 0; i < bases.size(); i++) {
                 String b = bases.get(i);
