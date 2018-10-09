@@ -20,7 +20,8 @@ import javax.xml.ws.handler.MessageContext;
  * @author Peter Bieringer, Marco Lechner
  * <p>
  * irixBroker has to decide what to do with the information from an IRIX report
- * e.g. information for ELAN or measurements for VDB
+ * e.g. information for ELAN, measurements for VDB, documents for IAEA,
+ * EU or federal states
  */
 
 public class IrixBroker {
@@ -102,23 +103,27 @@ public class IrixBroker {
                 }
                 //data for IAEA/USIE
                 if (b.equals("IAEA")) {
-                    //IrixBrokerIAEAClient iic = new IrixBrokerIAEAClient(report);
-                    //iic.sendToIAEA();
-                    log.debug("TODO: create IrixBrokerIAEAClient");
+                    IrixBrokerIAEAClient iic = new IrixBrokerIAEAClient(bfsIBP);
+                    iic.sendToIAEA(report);
+                    log.debug(iic.getReportContext());
+                    log.debug("IrixBrokerIAEAClient created");
+                    log.debug("TODO: implement workflow in IrixBrokerIAEAClient");
                 }
                 //data for EU/ECURIE
                 if (b.equals("EU")) {
-                    //IrixBrokerEUClient ieuc = new IrixBrokerEUClient(report);
-                    //ieuc.sendToEU();
-                    log.debug("TODO: create IrixBrokerEUClient");
+                    IrixBrokerEUClient ieuc = new IrixBrokerEUClient(bfsIBP);
+                    ieuc.sendToEU(report);
+                    log.debug(ieuc.getReportContext());
+                    log.debug("IrixBrokerEUClient created");
+                    log.debug("TODO: implement workflow in IrixBrokerEUClient");
                 }
-                //data for federal state Baden-Württemberg (BW, ...)
+                //data for federal state Baden-Wuerttemberg (BW, ...)
                 //FIXME could this be done more generic and robust?
                 if (b.startsWith("BL_")) {
                     String bl = b.replaceFirst("^BL_", "");
                     log.debug("BL extracted: " + bl);
-                    //IrixBrokerBLClient iblc = new IrixBrokerBLClient(report, bl);
-                    //iblc.sendToEU();
+                    IrixBrokerBLClient iblc = new IrixBrokerBLClient(bfsIBP);
+                    iblc.sendToBL(report, bl);
                     log.debug("TODO: create IrixBrokerBLClient");
                 }
             }
@@ -126,7 +131,7 @@ public class IrixBroker {
 
     }
 
-}
+
 
     /**
      * TODO Test if recipient is available.

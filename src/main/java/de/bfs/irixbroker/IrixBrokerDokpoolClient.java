@@ -10,6 +10,7 @@ import java.lang.NullPointerException;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.log4j.Logger;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
@@ -27,6 +28,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
+
+    private static Logger log = Logger.getLogger(IrixBrokerDokpoolClient.class);
 
     private String OrganisationReporting;
     private XMLGregorianCalendar DateTime;
