@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package de.bfs.irixbroker;
 
@@ -18,10 +18,9 @@ import javax.xml.ws.handler.MessageContext;
 
 /**
  * @author Peter Bieringer, Marco Lechner
- * 
+ * <p>
  * irixBroker has to decide what to do with the information from an IRIX report
  * e.g. information for ELAN or measurements for VDB
- *
  */
 
 public class IrixBroker {
@@ -32,11 +31,15 @@ public class IrixBroker {
     private WebServiceContext context;
 
     //alternatively get dokpool credentials from file
-    /** Path to the IrixBroker Dokpool properties file. */
+    /**
+     * Path to the IrixBroker Dokpool properties file.
+     */
     private static final String DOKPOOL_CONN_LOC =
             "./bfs-irixbroker.properties";
 
-    /** Has {@link init()} successfully been called? */
+    /**
+     * Has {@link init()} successfully been called?
+     */
     public boolean initialized;
 
     public final Properties bfsIBP;
@@ -57,9 +60,11 @@ public class IrixBroker {
         initialized = true;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     //@Override
-	public void deliverIrixBroker(ReportType report) throws IrixBrokerException {
+    public void deliverIrixBroker(ReportType report) throws IrixBrokerException {
         if (!initialized) {
             // Necessary because the servlet context is not accessible in ctor
             init();
@@ -67,44 +72,61 @@ public class IrixBroker {
             testRecipientConnection();
         }
 
-		if(report == null)
-			System.exit(-1);
-		else
-		{
-			IdentificationType ident= report.getIdentification();
-			ReportingBasesType base= ident.getReportingBases();
-			List<String> bases;
-			bases = base.getReportingBasis();
-			
-			if(bases.isEmpty())
-			{
-				System.out.println("No reporting bases!");
-				System.exit(-2);
-			}
-			for(int i=0;i<bases.size();i++)
-			{
-				String b=bases.get(i);
-				
-				//documents for ELAN
-				if(b.equals("ESD"))
-				{
+        if (report == null)
+            System.exit(-1);
+        else {
+            IdentificationType ident = report.getIdentification();
+            ReportingBasesType base = ident.getReportingBases();
+            List<String> bases;
+            bases = base.getReportingBasis();
+
+            if (bases.isEmpty()) {
+                System.out.println("No reporting bases!");
+                System.exit(-2);
+            }
+            for (int i = 0; i < bases.size(); i++) {
+                String b = bases.get(i);
+
+                //documents for Dokpool
+                if (b.equals("ESD")) {
                     IrixBrokerDokpoolClient iec = new IrixBrokerDokpoolClient(bfsIBP);
-                    iec.doTheWork(report);
+                    iec.sendToDocpool(report);
                     log.debug(iec.getReportContext());
                     log.debug("iec created");
-				}
-
-                //data for VDB
-                if(b.equals("VDB"))
-                {
-                    //IrixBrokerVDBClient vdb = new IrixBrokerDokpoolClient(report);
-                    //vdb.doTheWork();
-                    log.debug("TODO: create vdb");
                 }
-			}
-			
-		}
-	}
+                //data for VDB
+                if (b.equals("VDB")) {
+                    //IrixBrokerVDBClient ivc = new IrixBrokerVDBClient(report);
+                    //ivc.sendToVDB();
+                    log.debug("TODO: create IrixBrokerVDBClient");
+                }
+                //data for IAEA/USIE
+                if (b.equals("IAEA")) {
+                    //IrixBrokerIAEAClient iic = new IrixBrokerIAEAClient(report);
+                    //iic.sendToIAEA();
+                    log.debug("TODO: create IrixBrokerIAEAClient");
+                }
+                //data for EU/ECURIE
+                if (b.equals("EU")) {
+                    //IrixBrokerEUClient ieuc = new IrixBrokerEUClient(report);
+                    //ieuc.sendToEU();
+                    log.debug("TODO: create IrixBrokerEUClient");
+                }
+                //data for federal state Baden-Württemberg (BW, ...)
+                //FIXME could this be done more generic and robust?
+                if (b.startsWith("BL_")) {
+                    String bl = b.replaceFirst("^BL_", "");
+                    log.debug("BL extracted: " + bl);
+                    //IrixBrokerBLClient iblc = new IrixBrokerBLClient(report, bl);
+                    //iblc.sendToEU();
+                    log.debug("TODO: create IrixBrokerBLClient");
+                }
+            }
+        }
+
+    }
+
+}
 
     /**
      * TODO Test if recipient is available.

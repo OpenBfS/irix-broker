@@ -52,12 +52,10 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 		bfsIrixBrokerProperties = bfsIBP;
 	}
 
-	public boolean doTheWork(ReportType report){
+	public boolean sendToDocpool(ReportType report){
 		success = false;
-
 		success = readIdentification(report.getIdentification());
 		success = readAnnexes(report.getAnnexes());
-
 		success = DocPoolClient();
 		return success;
 	}
