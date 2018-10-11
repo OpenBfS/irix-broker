@@ -4,9 +4,12 @@
 
 package de.bfs.irixbroker;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import java.lang.NullPointerException;
+
+import java.net.URLEncoder;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -53,11 +56,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         bfsIrixBrokerProperties = bfsIBP;
     }
 
-    public boolean sendToDocpool(ReportType report) {
+    public boolean sendToDocpool(ReportType report) throws  IrixBrokerException {
         success = false;
         success = readIdentification(report.getIdentification());
         success = readAnnexes(report.getAnnexes());
-        success = DocPoolClient();
+        try {
+            success = DocPoolClient();
+        } catch (Exception e){
+            throw new IrixBrokerException( "DocPoolClient() not working as expected: ", e);
+        }
         return success;
     }
 
@@ -122,26 +129,26 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return true;
     }
 
-    private DocumentPool getMydokpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools) {
+    private DocumentPool getMyDocpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools) {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
         DocumentPool myDocpool = docpoolBaseService.getPrimaryDocumentPool();
-        Element mydokpoolname = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
-        Boolean renewdokpool = true;
-        if (renewdokpool && (mydokpoolname != null)) {
-            for (DocumentPool sdokpool : myDocpools) {
-                if (sdokpool.getFolderPath().matches("/" + ploneSite + "/" + mydokpoolname.getTextContent())) {
-                    myDocpool = sdokpool;
-                    renewdokpool = false;
+        Element myDocpoolName = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
+        Boolean renewDocpool = true;
+        if (renewDocpool && (myDocpoolName != null)) {
+            for (DocumentPool sDocpool : myDocpools) {
+                if (sDocpool.getFolderPath().matches("/" + ploneSite + "/" + myDocpoolName.getTextContent())) {
+                    myDocpool = sDocpool;
+                    renewDocpool = false;
                 }
             }
         }
-        if (renewdokpool) {
-            for (DocumentPool sdokpool : myDocpools) {
-                if (sdokpool.getFolderPath().matches("/" + ploneSite + "/" + ploneDokpool)) {
-                    myDocpool = sdokpool;
+        if (renewDocpool) {
+            for (DocumentPool sDocpool : myDocpools) {
+                if (sDocpool.getFolderPath().matches("/" + ploneSite + "/" + ploneDokpool)) {
+                    myDocpool = sDocpool;
                 }
             }
         }
@@ -187,46 +194,45 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return myGroupFolder;
     }
 
-    private Map<String, Object> setBehaviors() {
+    private List <String> getBehaviors(DocumentPool docpool) {
+        List<String> behaviorList = new ArrayList();
+        Map<String, Object> docpoolData = docpool.getDocumentPoolData();
+        Object[] docpoolBehaviorList;
+        try {
+            docpoolBehaviorList = (Object[])docpoolData.get("supportedApps");
+            for ( Object behavior : docpoolBehaviorList){
+                behaviorList.add((String)behavior);
+            }
+        } catch(Exception e) {
+            log.warn("Can not get behaviorList from Docpool: e", e);
+        }
+
+        return behaviorList;
+    }
+
+
+        private Map<String, Object> setBehaviors(DocumentPool documentPool) {
         //TODO check if Dokpool supports behaviours before adding them
+        List <String> docpoolBehaviors = getBehaviors(documentPool);
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> behaviorsList = new ArrayList<String>();
         String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
-
+        // only add behaviors provided by docpool - is this ok?
         for (String behaviorTag : behaviorsTagList) {
             Element element = extractSingleElement(dokpoolmeta, behaviorTag);
             if (element.getTextContent().equalsIgnoreCase("true")) {
-                behaviorsList.add(element.getTagName().replaceFirst("^Is", "").toLowerCase());
+                String behavior = element.getTagName().replaceFirst("^Is", "").toLowerCase();
+                if (docpoolBehaviors.contains(behavior)) {
+                    behaviorsList.add(behavior);
+                }
             }
         }
-
-        /*Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
-        if (elan.getTextContent().equalsIgnoreCase("true")) {
-            behaviorsList.add("elan");
-            //properties.put("scenarios",scenarios);
-            //d.update(new HashMap<String, Object>("scenarios", scenarios));
-            //TODO other elan specific properties must be added later
-        }
-        Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
-        if (rodos.getTextContent().equalsIgnoreCase("true")) {
-            behaviorsList.add("rodos");
-        }
-        Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
-        if (rei.getTextContent().equalsIgnoreCase("true")) {
-            behaviorsList.add("rei");
-        }
-
-        Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
-        if (doksys.getTextContent().equalsIgnoreCase("true")) {
-            behaviorsList.add("doksys");
-        }*/
 
         if (behaviorsList.size() > 0) {
             properties.put("local_behaviors", behaviorsList);
         }
         return properties;
     }
-
 
 
     private Map<String, Object> setSubjects(){
@@ -318,7 +324,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return reiProperties;
     }
 
-    private boolean DocPoolClient() {
+    private boolean DocPoolClient() throws IrixBrokerException {
         success = true;
 
         String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
@@ -335,7 +341,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
         // DocumentPool
         List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
-        DocumentPool myDocpool = getMydokpool(docpoolBaseService, myDocpools);
+        DocumentPool myDocpool = getMyDocpool(docpoolBaseService, myDocpools);
 
         //GroupFolder
         List<Folder> groupFolders = myDocpool.getGroupFolders();
@@ -350,7 +356,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docpoolProperties.put("text", main_text);
         Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
         docpoolProperties.put("docType", dt.getTextContent());
-        docpoolProperties.putAll(setBehaviors());
+        docpoolProperties.putAll(setBehaviors(myDocpool));
 
         Document d = myGroupFolder.createDocument(ReportId, docpoolProperties);
         log.info(d.getTitle());
@@ -362,11 +368,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys.getTextContent().equalsIgnoreCase("true")) {
             d.update(setDoksysProperties());
-            //FIXME  may be for loop needed here?
-            /*for (FOO key : doksysProperties.keySet()) {
-                //d.setProperty(key, dokpoolProperties.get(key), "string");
-                d.update(doksysProperty);
-            }*/
         }
         // updating document with elan specific properties
         Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
@@ -388,18 +389,23 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         // add attachements
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
-            //FIXME path generation URL consistent!!
             String aid = fet.get(i).getFileName();
-            log.info("Anhang" + i + ": " + t);
-            if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
-                d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
+            try{
+                String afn = URLEncoder.encode(fet.get(i).getFileName(), "UTF-8");
+                log.info("Anhang" + i + ": " + t);
+                if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
+                    d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), afn);
+                }
+                // TODO separate handling of movie files
+                else if (MT_MOVIES.contains(fet.get(i).getMimeType())) {
+                    d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), afn);
+                } else {
+                    d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), afn);
+                }
+            } catch (UnsupportedEncodingException uee){
+                throw new IrixBrokerException("Could not Upload Attachement: ", uee);
             }
-            // TODO separate handling of movie files
-            else if (MT_MOVIES.contains(fet.get(i).getMimeType())) {
-                d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
-            } else {
-                d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), fet.get(i).getFileName());
-            }
+
         }
 
         if (Confidentiality.equals(ID_CONF)) {

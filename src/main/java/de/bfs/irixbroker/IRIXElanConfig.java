@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * @author Peter Bieringer
  * @version 0.1 02.03.2015
- *
+ * FIXME is this file obsolete?? lem-fr, 2018-10-11;
  *
  */
 public class IRIXElanConfig {
