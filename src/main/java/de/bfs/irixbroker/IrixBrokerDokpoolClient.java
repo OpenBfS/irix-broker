@@ -21,11 +21,11 @@ import org.iaea._2012.irix.format.annexes.FileEnclosureType;
 import org.iaea._2012.irix.format.identification.EventIdentificationType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
 
-import de.bfs.dokpool.client.Document;
-import de.bfs.dokpool.client.DocumentPool;
-import de.bfs.dokpool.client.Scenario;
-import de.bfs.dokpool.client.DocpoolBaseService;
-import de.bfs.dokpool.client.Folder;
+import de.bfs.dokpool.client.content.Document;
+import de.bfs.dokpool.client.content.DocumentPool;
+import de.bfs.dokpool.client.content.Scenario;
+import de.bfs.dokpool.client.base.DocpoolBaseService;
+import de.bfs.dokpool.client.content.Folder;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -196,7 +196,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private List <String> getBehaviors(DocumentPool docpool) {
         List<String> behaviorList = new ArrayList();
-        Map<String, Object> docpoolData = docpool.getDocumentPoolData();
+        // TODO get this working
+        /*Map<String, Object> docpoolData = docpool.getDocumentPoolData();
         Object[] docpoolBehaviorList;
         try {
             docpoolBehaviorList = (Object[])docpoolData.get("supportedApps");
@@ -205,7 +206,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             }
         } catch(Exception e) {
             log.warn("Can not get behaviorList from Docpool: e", e);
-        }
+        }*/
 
         return behaviorList;
     }
@@ -237,7 +238,14 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private Map<String, Object> setSubjects(){
         Map<String, Object> properties = new HashMap<String, Object>();
-        Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
+
+        setDoksysSubjects(properties);
+        setElanSubjects(properties);
+        setRodosSubjects(properties);
+        setReiSubjects(properties);
+
+        // FIXME set Dokpool subjects here!
+        /*Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
         Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
         Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
         Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
@@ -247,8 +255,30 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element mp = extractSingleElement(dokpoolmeta, TAG_MEASURINGPROGRAM);
         Element status = extractSingleElement(dokpoolmeta, TAG_STATUS);
         Element sbegin = extractSingleElement(dokpoolmeta, TAG_SAMPLINGBEGIN);
-        Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
+        Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);*/
 
+        properties.put("subjects", new String[]{
+                "SubjectTest von lem-fr",
+                "no DOKPOOL subjects"
+        });
+
+        return properties;
+    }
+
+    private void setDoksysSubjects(Map<String, Object> properties){
+
+        Element doksysmeta = extractSingleElement(dokpoolmeta, "DOKSYS");
+        Element purpose = extractSingleElement(doksysmeta, TAG_PURPOSE);
+        Element network = extractSingleElement(doksysmeta, TAG_NETWORKOPERATOR);
+        Element stid = extractSingleElement(doksysmeta, TAG_SAMPLETYPEID);
+        Element st = extractSingleElement(doksysmeta, TAG_SAMPLETYPE);
+        Element dom = extractSingleElement(doksysmeta, TAG_DOM);
+        Element dtype = extractSingleElement(doksysmeta, TAG_DATATYPE);
+        Element lbase = extractSingleElement(doksysmeta, TAG_LEGALBASE);
+        Element mp = extractSingleElement(doksysmeta, TAG_MEASURINGPROGRAM);
+        Element status = extractSingleElement(doksysmeta, TAG_STATUS);
+        Element sbegin = extractSingleElement(doksysmeta, TAG_SAMPLINGBEGIN);
+        Element send = extractSingleElement(doksysmeta, TAG_SAMPLINGEND);
         properties.put("subjects", new String[]{
                 "SubjectTest von lem-fr",
                 purpose.getTextContent(),
@@ -263,8 +293,33 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 sbegin.getTextContent(),
                 send.getTextContent()
         });
+    }
 
-        return properties;
+    private void setElanSubjects(Map<String, Object> properties){
+
+        Element elanmeta = extractSingleElement(dokpoolmeta, "ELAN");
+        //Element foo = extractSingleElement(elanmeta, TAG_FOO);
+        properties.put("subjects", new String[]{
+                "no ELAN subjects"
+        });
+    }
+
+    private void setRodosSubjects(Map<String, Object> properties){
+
+        Element rodosmeta = extractSingleElement(dokpoolmeta, "RODOS");
+        //Element foo = extractSingleElement(rodosmeta, TAG_FOO);
+        properties.put("subjects", new String[]{
+                "no RODOS subjects"
+        });
+    }
+
+    private void setReiSubjects(Map<String, Object> properties){
+
+        Element reimeta = extractSingleElement(dokpoolmeta, "REI");
+        //Element foo = extractSingleElement(reimeta, TAG_FOO);
+        properties.put("subjects", new String[]{
+                "no REI subjects"
+        });
     }
 
     private Map<String, Object> setDoksysProperties(){
@@ -358,7 +413,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docpoolProperties.put("docType", dt.getTextContent());
         docpoolProperties.putAll(setBehaviors(myDocpool));
 
-        Document d = myGroupFolder.createDocument(ReportId, docpoolProperties);
+        Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
         log.info(d.getTitle());
 
         // updating document with generic (docpool) properties
