@@ -244,22 +244,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         setRodosSubjects(properties);
         setReiSubjects(properties);
 
-        // FIXME set Dokpool subjects here!
-        /*Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
-        Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
-        Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
-        Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
-        Element dom = extractSingleElement(dokpoolmeta, TAG_DOM);
-        Element dtype = extractSingleElement(dokpoolmeta, TAG_DATATYPE);
-        Element lbase = extractSingleElement(dokpoolmeta, TAG_LEGALBASE);
-        Element mp = extractSingleElement(dokpoolmeta, TAG_MEASURINGPROGRAM);
-        Element status = extractSingleElement(dokpoolmeta, TAG_STATUS);
-        Element sbegin = extractSingleElement(dokpoolmeta, TAG_SAMPLINGBEGIN);
-        Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);*/
+        //Element subjects = extractSingleElement(dokpoolmeta, TAG_SUBJECT);
 
         properties.put("subjects", new String[]{
                 "SubjectTest von lem-fr",
-                "no DOKPOOL subjects"
+                "no DOKPOOL subjects"//,
+                //subjects
         });
 
         return properties;
@@ -268,30 +258,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private void setDoksysSubjects(Map<String, Object> properties){
 
         Element doksysmeta = extractSingleElement(dokpoolmeta, "DOKSYS");
-        Element purpose = extractSingleElement(doksysmeta, TAG_PURPOSE);
-        Element network = extractSingleElement(doksysmeta, TAG_NETWORKOPERATOR);
-        Element stid = extractSingleElement(doksysmeta, TAG_SAMPLETYPEID);
-        Element st = extractSingleElement(doksysmeta, TAG_SAMPLETYPE);
-        Element dom = extractSingleElement(doksysmeta, TAG_DOM);
-        Element dtype = extractSingleElement(doksysmeta, TAG_DATATYPE);
-        Element lbase = extractSingleElement(doksysmeta, TAG_LEGALBASE);
-        Element mp = extractSingleElement(doksysmeta, TAG_MEASURINGPROGRAM);
-        Element status = extractSingleElement(doksysmeta, TAG_STATUS);
-        Element sbegin = extractSingleElement(doksysmeta, TAG_SAMPLINGBEGIN);
-        Element send = extractSingleElement(doksysmeta, TAG_SAMPLINGEND);
+        //Element foo = extractSingleElement(doksysmeta, TAG_FOO);
         properties.put("subjects", new String[]{
-                "SubjectTest von lem-fr",
-                purpose.getTextContent(),
-                network.getTextContent(),
-                stid.getTextContent(),
-                st.getTextContent(),
-                dom.getTextContent(),
-                dtype.getTextContent(),
-                lbase.getTextContent(),
-                mp.getTextContent(),
-                status.getTextContent(),
-                sbegin.getTextContent(),
-                send.getTextContent()
+                "no DOKSYS subjects"
         });
     }
 
