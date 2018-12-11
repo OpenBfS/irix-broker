@@ -16,8 +16,8 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_ISDOKSYS = "IsDoksys";
 	String TAG_ISRODOS ="IsRodos";
 	String TAG_ISREI ="IsRei";
-	String TAG_ELANSCENARIOS ="ElanScenarios";
-	String TAG_ELANSCENARIO ="ElanScenario";
+	String TAG_ELANSCENARIOS ="Scenarios";
+	String TAG_ELANSCENARIO ="Scenario";
 	String TAG_NETWORKOPERATOR ="NetworkOperator" ;
 	String TAG_SAMPLETYPEID ="SampleTypeId";
 	String TAG_SAMPLETYPE ="SampleType";

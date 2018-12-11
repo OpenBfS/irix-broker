@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
@@ -27,6 +28,7 @@ import de.bfs.dokpool.client.content.Scenario;
 import de.bfs.dokpool.client.base.DocpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
+import org.springframework.web.util.UrlPathHelper;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -228,6 +230,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 }
             }
         }
+        // no, code above is not ok. Add behaviors even if not (yet) in Dokpool
+        for (String behaviorTag : behaviorsTagList) {
+            Element element = extractSingleElement(dokpoolmeta, behaviorTag);
+            if (element.getTextContent().equalsIgnoreCase("true")) {
+                String behavior = element.getTagName().replaceFirst("^Is", "").toLowerCase();
+                behaviorsList.add(behavior);
+            }
+        }
+
 
         if (behaviorsList.size() > 0) {
             properties.put("local_behaviors", behaviorsList);
@@ -238,57 +249,48 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private Map<String, Object> setSubjects(){
         Map<String, Object> properties = new HashMap<String, Object>();
+        List<String> propertiesList = new ArrayList<String>();
 
-        setDoksysSubjects(properties);
-        setElanSubjects(properties);
-        setRodosSubjects(properties);
-        setReiSubjects(properties);
+        getDoksysSubjects(propertiesList);
+        getElanSubjects(propertiesList);
+        getRodosSubjects(propertiesList);
+        getReiSubjects(propertiesList);
 
         //Element subjects = extractSingleElement(dokpoolmeta, TAG_SUBJECT);
+        Map<String, Object> dokpoolProperties = new HashMap<String, Object>();
+        propertiesList.add("SubjectTest von lem-fr");
+        propertiesList.add("no DOKPOOL subjects");
 
-        properties.put("subjects", new String[]{
-                "SubjectTest von lem-fr",
-                "no DOKPOOL subjects"//,
-                //subjects
-        });
-
+        properties.put("subjects", propertiesList);
         return properties;
     }
 
-    private void setDoksysSubjects(Map<String, Object> properties){
+    private void getDoksysSubjects(List<String> propertiesList){
 
         Element doksysmeta = extractSingleElement(dokpoolmeta, "DOKSYS");
         //Element foo = extractSingleElement(doksysmeta, TAG_FOO);
-        properties.put("subjects", new String[]{
-                "no DOKSYS subjects"
-        });
+        propertiesList.add("no DOKSYS subjects");
     }
 
-    private void setElanSubjects(Map<String, Object> properties){
+    private void getElanSubjects(List<String> propertiesList){
 
         Element elanmeta = extractSingleElement(dokpoolmeta, "ELAN");
         //Element foo = extractSingleElement(elanmeta, TAG_FOO);
-        properties.put("subjects", new String[]{
-                "no ELAN subjects"
-        });
+        propertiesList.add("no ELAN subjects");
     }
 
-    private void setRodosSubjects(Map<String, Object> properties){
+    private void getRodosSubjects(List<String> propertiesList){
 
         Element rodosmeta = extractSingleElement(dokpoolmeta, "RODOS");
         //Element foo = extractSingleElement(rodosmeta, TAG_FOO);
-        properties.put("subjects", new String[]{
-                "no RODOS subjects"
-        });
+        propertiesList.add("no RODOS subjects");
     }
 
-    private void setReiSubjects(Map<String, Object> properties){
+    private void getReiSubjects(List<String> propertiesList){
 
         Element reimeta = extractSingleElement(dokpoolmeta, "REI");
         //Element foo = extractSingleElement(reimeta, TAG_FOO);
-        properties.put("subjects", new String[]{
-                "no REI subjects"
-        });
+        propertiesList.add("no REI subjects");
     }
 
     private Map<String, Object> setDoksysProperties(){
@@ -317,13 +319,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private Map<String, Object> setElanProperties(DocumentPool myDocpool){
         /** point the new Dokument to active or referenced scenarios of the dokpool
-         *
+         * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
+         * and are active. If no scenarios are referenced in the request add all active
+         * scenarios
          */
-        //TODO support list of scenarios and properties settings as well!
         Map<String, Object> elanProperties = new HashMap<String, Object>();
-        Element myElanScenarios = extractSingleElement(dokpoolmeta, TAG_ELANSCENARIOS);
+        Element elanmeta = extractSingleElement(dokpoolmeta, "ELAN");
+        Element myElanScenarios = extractSingleElement(elanmeta, TAG_ELANSCENARIOS);
         if (myElanScenarios != null) {
-            NodeList myElanScenarioList = myElanScenarios.getElementsByTagName(TAG_ELANSCENARIO);
+            //NodeList myElanScenarioList = myElanScenarios.getElementsByTagName(TAG_ELANSCENARIO);
+            NodeList myElanScenarioList = myElanScenarios.getChildNodes();
             List<String> sclist = new ArrayList<String>();
             for (int i = 0; i < myElanScenarioList.getLength(); i++) {
                 sclist.add(myElanScenarioList.item(i).getTextContent());
@@ -381,12 +386,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
         docpoolProperties.put("docType", dt.getTextContent());
         docpoolProperties.putAll(setBehaviors(myDocpool));
+        docpoolProperties.putAll(setSubjects());
 
         Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
         log.info(d.getTitle());
 
-        // updating document with generic (docpool) properties
-        d.update(setSubjects());
+        // updating document with subjects
+        //d.update(setSubjects());
 
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
@@ -411,20 +417,26 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         }
 
         // add attachements
+
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
             String aid = fet.get(i).getFileName();
             try{
-                String afn = URLEncoder.encode(fet.get(i).getFileName(), "UTF-8");
+                //String afnurl = URLEncoder.encode(fet.get(i).getFileName(), "UTF-8");
+                String afn = fet.get(i).getFileName()
+                        .replaceAll("[^\\x00-\\x7F]", "")
+                        .replace("(", "")
+                        .replace(")", "")
+                        .replace(" ", "");
                 log.info("Anhang" + i + ": " + t);
                 if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
-                    d.uploadImage(aid, t, t, fet.get(i).getEnclosedObject(), afn);
+                    d.uploadImage(afn, t, t, fet.get(i).getEnclosedObject(), aid);
                 }
                 // TODO separate handling of movie files
                 else if (MT_MOVIES.contains(fet.get(i).getMimeType())) {
-                    d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), afn);
+                    d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid);
                 } else {
-                    d.uploadFile(aid, t, t, fet.get(i).getEnclosedObject(), afn);
+                    d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid);
                 }
             } catch (UnsupportedEncodingException uee){
                 throw new IrixBrokerException("Could not Upload Attachement: ", uee);
@@ -449,12 +461,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     public void addActiveScenariosfromDokpool(DocumentPool dp) {
 
-        List<Scenario> scen = dp.getScenarios();
+        List<Scenario> scen = dp.getActiveScenarios();
         String[] sc = new String[scen.size()];
         for (int i = 0; i < scen.size(); i++) {
-            String stat = scen.get(i).getStringAttribute("status");
+            /*String stat = scen.get(i).getStringAttribute("status");
             if (stat.equals("active"))
-                sc[i] = scen.get(i).getId();
+                sc[i] = scen.get(i).getId();*/
+            sc[i] = scen.get(i).getId();
         }
         setScenarios(sc);
     }
