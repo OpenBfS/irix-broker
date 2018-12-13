@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import de.bfs.irix.extensions.dokpool.DokpoolMeta;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.iaea._2012.irix.format.ReportType;
@@ -50,6 +51,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private String ReportId;
     private Element dokpoolmeta; //DOM Element with the full dokpoolmeta information
     private Properties bfsIrixBrokerProperties;
+    private String dokpoolUser = "irixauto";
 
     private boolean success = false;
 
@@ -94,6 +96,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 log.debug("eventidentification filled");
             }
         }
+        if (ident.getIdentifications() != null) {
+            if (ident.getIdentifications().getPersonContactInfo() != null) {
+                if (ident.getIdentifications().getPersonContactInfo().get(0) != null) {
+                    dokpoolUser = ident.getIdentifications().getPersonContactInfo().get(0).getName();
+
+                }
+            }
+
+
+            dokpoolUser = ident.getContactPerson().toString();
+        }
 
         return success;
     }
@@ -128,6 +141,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private boolean publish(Document d) {
         d.setWorkflowStatus("publish");
+        return true;
+    }
+
+    private boolean chown(Document d) {
+        d.getProperties();
         return true;
     }
 
@@ -295,19 +313,19 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private Map<String, Object> setDoksysProperties(){
         Map<String, Object> doksysProperties = new HashMap<String, Object>();
-        //getting the dokpool metainformation by tagname
-        //TODO activate dokpoolname and dokpoolfolder
-        Element purpose = extractSingleElement(dokpoolmeta, TAG_PURPOSE);
-        Element network = extractSingleElement(dokpoolmeta, TAG_NETWORKOPERATOR);
-        Element stid = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPEID);
-        Element st = extractSingleElement(dokpoolmeta, TAG_SAMPLETYPE);
-        Element dom = extractSingleElement(dokpoolmeta, TAG_DOM);
-        Element dtype = extractSingleElement(dokpoolmeta, TAG_DATATYPE);
-        Element lbase = extractSingleElement(dokpoolmeta, TAG_LEGALBASE);
-        Element mp = extractSingleElement(dokpoolmeta, TAG_MEASURINGPROGRAM);
-        Element status = extractSingleElement(dokpoolmeta, TAG_STATUS);
-        Element sbegin = extractSingleElement(dokpoolmeta, TAG_SAMPLINGBEGIN);
-        Element send = extractSingleElement(dokpoolmeta, TAG_SAMPLINGEND);
+        Element doksysmeta = extractSingleElement(dokpoolmeta, "DOKSYS");
+        //getting the doksys metainformation by tagname
+        Element purpose = extractSingleElement(doksysmeta, TAG_PURPOSE);
+        Element network = extractSingleElement(doksysmeta, TAG_NETWORKOPERATOR);
+        Element stid = extractSingleElement(doksysmeta, TAG_SAMPLETYPEID);
+        Element st = extractSingleElement(doksysmeta, TAG_SAMPLETYPE);
+        Element dom = extractSingleElement(doksysmeta, TAG_DOM);
+        Element dtype = extractSingleElement(doksysmeta, TAG_DATATYPE);
+        Element lbase = extractSingleElement(doksysmeta, TAG_LEGALBASE);
+        Element mp = extractSingleElement(doksysmeta, TAG_MEASURINGPROGRAM);
+        Element status = extractSingleElement(doksysmeta, TAG_STATUS);
+        Element sbegin = extractSingleElement(doksysmeta, TAG_SAMPLINGBEGIN);
+        Element send = extractSingleElement(doksysmeta, TAG_SAMPLINGEND);
 
         doksysProperties.put("purpose", purpose.getTextContent());
         doksysProperties.put("dom", dom.getTextContent());
@@ -416,13 +434,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             d.update(setReiProperties());
         }
 
+        // setOwner from irixmeta if account exists in Dokpool
+        // FIXME
+        //Element dokpooluser = extractSingleElement(dokpoolmeta, "")
+
         // add attachements
 
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
             String aid = fet.get(i).getFileName();
             try{
-                //String afnurl = URLEncoder.encode(fet.get(i).getFileName(), "UTF-8");
+                String afnurl = URLEncoder.encode(fet.get(i).getFileName(), "UTF-8");
                 String afn = fet.get(i).getFileName()
                         .replaceAll("[^\\x00-\\x7F]", "")
                         .replace("(", "")
@@ -443,6 +465,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             }
 
         }
+
+        chown(d);
 
         if (Confidentiality.equals(ID_CONF)) {
             publish(d);
