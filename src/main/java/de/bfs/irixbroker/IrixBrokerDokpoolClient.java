@@ -29,7 +29,6 @@ import de.bfs.dokpool.client.content.Scenario;
 import de.bfs.dokpool.client.base.DocpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
-import org.junit.Test;
 import org.springframework.web.util.UrlPathHelper;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -129,11 +128,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private boolean publish(Document d) {
         d.setWorkflowStatus("publish");
-        return true;
-    }
-
-    private boolean chown(Document d) {
-        d.getProperties();
         return true;
     }
 
@@ -359,6 +353,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return reiProperties;
     }
 
+    private Map<String, Object> setCreators(){
+        Map<String, Object> properties = new HashMap<String, Object>();
+        List<String> creatorsList = new ArrayList<String>();
+        creatorsList.add("irixauto");
+        creatorsList.add("lem-fr");
+        creatorsList.add("rb-fr");
+        properties.put("creators", creatorsList);
+        return properties;
+    }
+
+
     private boolean DocPoolClient() throws IrixBrokerException {
         success = true;
 
@@ -366,7 +371,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
         String port = bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
-        String owner = bfsIrixBrokerProperties.getProperty("irix-dokpool.OWNER");
+        String documentOwner = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOLDOCUMENTOWNER");
         String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
         String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
 
@@ -383,12 +388,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         List<Folder> groupFolders = myDocpool.getGroupFolders();
         Folder myGroupFolder = getMyGroupFolder(docpoolBaseService, myDocpool);
 
-        //DokpoolOwner to be used to change ownership of an created document
-        Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
-        if (dokpoolDocumentOwner ){
-
-        }
-
         /** hashmap to store the generic dokpool meta data
          *
          */
@@ -403,9 +402,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
         Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
         log.info(d.getTitle());
-
-        // updating document with subjects
-        //d.update(setSubjects());
 
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
@@ -428,10 +424,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         if (rei.getTextContent().equalsIgnoreCase("true")) {
             d.update(setReiProperties());
         }
-
-        // setOwner from irixmeta if account exists in Dokpool
-        // FIXME
-        //Element dokpooluser = extractSingleElement(dokpoolmeta, "")
 
         // add attachements
 
@@ -461,8 +453,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
         }
 
-        if (owner.equals(d.getProperty("owner"))) {
-            chown(d);
+        //DokpoolOwner to be used to change ownership of an created document
+        Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
+        if (!dokpoolDocumentOwner.getTextContent().equals("")) {
+            d.update(setCreators());
+
         }
 
         if (Confidentiality.equals(ID_CONF)) {
