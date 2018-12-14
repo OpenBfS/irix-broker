@@ -12,6 +12,7 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_DOKPOOLPRIVATEFOLDER = "DokpoolPrivateFolder";
 	String TAG_DOKPOOLTRANSFERFOLDER = "DokpoolTransferFolder";
 	String TAG_DOKPOOLCONTENTTYPE ="DokpoolContentType";
+	String TAG_DOKPOOLDOCUMENTOWNER = "DokpoolDocumentOwner";
 	String TAG_ISELAN = "IsElan";
 	String TAG_ISDOKSYS = "IsDoksys";
 	String TAG_ISRODOS ="IsRodos";

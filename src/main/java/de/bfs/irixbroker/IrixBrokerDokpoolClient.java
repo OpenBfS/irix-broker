@@ -29,6 +29,7 @@ import de.bfs.dokpool.client.content.Scenario;
 import de.bfs.dokpool.client.base.DocpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
+import org.junit.Test;
 import org.springframework.web.util.UrlPathHelper;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -51,7 +52,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private String ReportId;
     private Element dokpoolmeta; //DOM Element with the full dokpoolmeta information
     private Properties bfsIrixBrokerProperties;
-    private String dokpoolUser = "irixauto";
 
     private boolean success = false;
 
@@ -96,18 +96,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 log.debug("eventidentification filled");
             }
         }
-        if (ident.getIdentifications() != null) {
-            if (ident.getIdentifications().getPersonContactInfo() != null) {
-                if (ident.getIdentifications().getPersonContactInfo().get(0) != null) {
-                    dokpoolUser = ident.getIdentifications().getPersonContactInfo().get(0).getName();
-
-                }
-            }
-
-
-            dokpoolUser = ident.getContactPerson().toString();
-        }
-
         return success;
     }
 
@@ -378,6 +366,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
         String port = bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
+        String owner = bfsIrixBrokerProperties.getProperty("irix-dokpool.OWNER");
         String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
         String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
 
@@ -393,6 +382,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         //GroupFolder
         List<Folder> groupFolders = myDocpool.getGroupFolders();
         Folder myGroupFolder = getMyGroupFolder(docpoolBaseService, myDocpool);
+
+        //DokpoolOwner to be used to change ownership of an created document
+        Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
+        if (dokpoolDocumentOwner ){
+
+        }
 
         /** hashmap to store the generic dokpool meta data
          *
@@ -466,7 +461,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
         }
 
-        chown(d);
+        if (owner.equals(d.getProperty("owner"))) {
+            chown(d);
+        }
 
         if (Confidentiality.equals(ID_CONF)) {
             publish(d);
