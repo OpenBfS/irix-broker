@@ -199,38 +199,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private List <String> getBehaviors(DocumentPool docpool) {
         List<String> behaviorList = new ArrayList();
         // TODO get this working
-        /*Map<String, Object> docpoolData = docpool.getDocumentPoolData();
-        Object[] docpoolBehaviorList;
-        try {
-            docpoolBehaviorList = (Object[])docpoolData.get("supportedApps");
-            for ( Object behavior : docpoolBehaviorList){
-                behaviorList.add((String)behavior);
-            }
-        } catch(Exception e) {
-            log.warn("Can not get behaviorList from Docpool: e", e);
-        }*/
-
         return behaviorList;
     }
 
 
-        private Map<String, Object> setBehaviors(DocumentPool documentPool) {
+    private Map<String, Object> setBehaviors(DocumentPool documentPool) {
         //TODO check if Dokpool supports behaviours before adding them
         List <String> docpoolBehaviors = getBehaviors(documentPool);
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> behaviorsList = new ArrayList<String>();
-        String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
-        // only add behaviors provided by docpool - is this ok?
-        for (String behaviorTag : behaviorsTagList) {
-            Element element = extractSingleElement(dokpoolmeta, behaviorTag);
-            if (element.getTextContent().equalsIgnoreCase("true")) {
-                String behavior = element.getTagName().replaceFirst("^Is", "").toLowerCase();
-                if (docpoolBehaviors.contains(behavior)) {
-                    behaviorsList.add(behavior);
-                }
-            }
-        }
-        // no, code above is not ok. Add behaviors even if not (yet) in Dokpool
+        //String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
+        String[] behaviorsTagList = {TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
+        //FIXME allow doksys as well - breaks Dokpool at the moment!
         for (String behaviorTag : behaviorsTagList) {
             Element element = extractSingleElement(dokpoolmeta, behaviorTag);
             if (element.getTextContent().equalsIgnoreCase("true")) {
@@ -250,52 +230,57 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private Map<String, Object> setSubjects(){
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> propertiesList = new ArrayList<String>();
-
         getDoksysSubjects(propertiesList);
         getElanSubjects(propertiesList);
         getRodosSubjects(propertiesList);
         getReiSubjects(propertiesList);
 
-        //Element subjects = extractSingleElement(dokpoolmeta, TAG_SUBJECT);
-        Map<String, Object> dokpoolProperties = new HashMap<String, Object>();
-        propertiesList.add("SubjectTest von lem-fr");
-        propertiesList.add("no DOKPOOL subjects");
-
+        Element mySubjects = extractSingleElement(dokpoolmeta, TAG_SUBJECTS);
+        //Map<String, Object> dokpoolSubjects = new HashMap<String, Object>();
+        if (mySubjects != null) {
+            NodeList mySubjectsList = mySubjects.getChildNodes();
+            for (int i = 0; i <  mySubjectsList.getLength(); i++) {
+                String mySubjectContent = mySubjectsList.item(i).getTextContent().trim();
+                if (!mySubjectContent.isEmpty()) {
+                    propertiesList.add(mySubjectContent);
+                }
+            }
+        }
         properties.put("subjects", propertiesList);
         return properties;
     }
 
     private void getDoksysSubjects(List<String> propertiesList){
 
-        Element doksysmeta = extractSingleElement(dokpoolmeta, "DOKSYS");
+        Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
         //Element foo = extractSingleElement(doksysmeta, TAG_FOO);
-        propertiesList.add("no DOKSYS subjects");
+        //propertiesList.add("no DOKSYS subjects");
     }
 
     private void getElanSubjects(List<String> propertiesList){
 
-        Element elanmeta = extractSingleElement(dokpoolmeta, "ELAN");
+        Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         //Element foo = extractSingleElement(elanmeta, TAG_FOO);
-        propertiesList.add("no ELAN subjects");
+        //propertiesList.add("no ELAN subjects");
     }
 
     private void getRodosSubjects(List<String> propertiesList){
 
-        Element rodosmeta = extractSingleElement(dokpoolmeta, "RODOS");
+        Element rodosmeta = extractSingleElement(dokpoolmeta, TAG_RODOS);
         //Element foo = extractSingleElement(rodosmeta, TAG_FOO);
-        propertiesList.add("no RODOS subjects");
+        //propertiesList.add("no RODOS subjects");
     }
 
     private void getReiSubjects(List<String> propertiesList){
 
-        Element reimeta = extractSingleElement(dokpoolmeta, "REI");
+        Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
         //Element foo = extractSingleElement(reimeta, TAG_FOO);
-        propertiesList.add("no REI subjects");
+        //propertiesList.add("no REI subjects");
     }
 
     private Map<String, Object> setDoksysProperties(){
         Map<String, Object> doksysProperties = new HashMap<String, Object>();
-        Element doksysmeta = extractSingleElement(dokpoolmeta, "DOKSYS");
+        Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
         //getting the doksys metainformation by tagname
         Element purpose = extractSingleElement(doksysmeta, TAG_PURPOSE);
         Element network = extractSingleElement(doksysmeta, TAG_NETWORKOPERATOR);
@@ -324,16 +309,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
          * scenarios
          */
         Map<String, Object> elanProperties = new HashMap<String, Object>();
-        Element elanmeta = extractSingleElement(dokpoolmeta, "ELAN");
+        Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         Element myElanScenarios = extractSingleElement(elanmeta, TAG_ELANSCENARIOS);
         if (myElanScenarios != null) {
-            //NodeList myElanScenarioList = myElanScenarios.getElementsByTagName(TAG_ELANSCENARIO);
+
             NodeList myElanScenarioList = myElanScenarios.getChildNodes();
             List<String> sclist = new ArrayList<String>();
             for (int i = 0; i < myElanScenarioList.getLength(); i++) {
                 sclist.add(myElanScenarioList.item(i).getTextContent());
             }
-            //addScenariosfromDokpool(mydokpool, mydokpoolscenarios.getTextContent());
+
             addScenariosfromDokpool(myDocpool, sclist);
         } else {
             addActiveScenariosfromDokpool(myDocpool);
@@ -353,12 +338,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return reiProperties;
     }
 
-    private Map<String, Object> setCreators(){
+    private Map<String, Object> setCreators(DocumentPool documentPool){
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> creatorsList = new ArrayList<String>();
-        creatorsList.add("irixauto");
-        creatorsList.add("lem-fr");
-        creatorsList.add("rb-fr");
+        // add irix system user for imports as default
+        creatorsList.add(bfsIrixBrokerProperties.getProperty("irix-dokpool.USER"));
+
+        Element myDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
+        if (myDocumentOwner != null) {
+            creatorsList.add(myDocumentOwner.getTextContent());
+        }
         properties.put("creators", creatorsList);
         return properties;
     }
@@ -412,7 +401,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
         if (elan.getTextContent().equalsIgnoreCase("true")) {
             d.update(setElanProperties(myDocpool));
-            //TODO other elan specific properties must be added later
         }
         // updating document with elan specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
@@ -423,6 +411,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
         if (rei.getTextContent().equalsIgnoreCase("true")) {
             d.update(setReiProperties());
+        }
+
+        //DokpoolOwner to be used to change ownership of an created document
+        Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
+        if (!dokpoolDocumentOwner.getTextContent().equals("")) {
+            d.update(setCreators(myDocpool));
         }
 
         // add attachements
@@ -453,13 +447,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
         }
 
-        //DokpoolOwner to be used to change ownership of an created document
-        Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
-        if (!dokpoolDocumentOwner.getTextContent().equals("")) {
-            d.update(setCreators());
-
-        }
-
         if (Confidentiality.equals(ID_CONF)) {
             publish(d);
         }
@@ -480,9 +467,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         List<Scenario> scen = dp.getActiveScenarios();
         String[] sc = new String[scen.size()];
         for (int i = 0; i < scen.size(); i++) {
-            /*String stat = scen.get(i).getStringAttribute("status");
-            if (stat.equals("active"))
-                sc[i] = scen.get(i).getId();*/
+
+
+
             sc[i] = scen.get(i).getId();
         }
         setScenarios(sc);
