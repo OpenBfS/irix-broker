@@ -209,7 +209,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> behaviorsList = new ArrayList<String>();
         //String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
-        String[] behaviorsTagList = {TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
+        String[] behaviorsTagList = {TAG_ISELAN, TAG_ISRODOS, TAG_ISREI, TAG_ISDOKSYS};
         //FIXME allow doksys as well - breaks Dokpool at the moment!
         for (String behaviorTag : behaviorsTagList) {
             Element element = extractSingleElement(dokpoolmeta, behaviorTag);
@@ -281,24 +281,36 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private Map<String, Object> setDoksysProperties(){
         Map<String, Object> doksysProperties = new HashMap<String, Object>();
         Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
-        //getting the doksys metainformation by tagname
-        Element purpose = extractSingleElement(doksysmeta, TAG_PURPOSE);
-        Element network = extractSingleElement(doksysmeta, TAG_NETWORKOPERATOR);
-        Element stid = extractSingleElement(doksysmeta, TAG_SAMPLETYPEID);
-        Element st = extractSingleElement(doksysmeta, TAG_SAMPLETYPE);
-        Element dom = extractSingleElement(doksysmeta, TAG_DOM);
-        Element dtype = extractSingleElement(doksysmeta, TAG_DATATYPE);
-        Element lbase = extractSingleElement(doksysmeta, TAG_LEGALBASE);
-        Element mp = extractSingleElement(doksysmeta, TAG_MEASURINGPROGRAM);
-        Element status = extractSingleElement(doksysmeta, TAG_STATUS);
-        Element sbegin = extractSingleElement(doksysmeta, TAG_SAMPLINGBEGIN);
-        Element send = extractSingleElement(doksysmeta, TAG_SAMPLINGEND);
+        String[] doksysTagList = {
+                TAG_AREA,
+                TAG_PURPOSE,
+                TAG_NETWORKOPERATOR,
+                TAG_SAMPLETYPEID,
+                TAG_SAMPLETYPE,
+                TAG_DOM,
+                TAG_DATATYPE,
+                TAG_LEGALBASE,
+                TAG_MEASURINGPROGRAM,
+                TAG_STATUS,
+                TAG_DURATION,
+                TAG_MEASUREMENTCATEGORY,
+                TAG_OPERATIONMODE,
+                TAG_TRAJECTORYSTARTLOCATION,
+                TAG_TRAJECTORYENDLOCATION,
+                TAG_TYPE
+        };
+        /*TAG_SAMPLINGBEGIN,
+        TAG_SAMPLINGEND,
+        TAG_TRAJECTORYSTARTTIME,
+        TAG_TRAJECTORYENDTIME,
+        */
 
-        doksysProperties.put("purpose", purpose.getTextContent());
-        doksysProperties.put("dom", dom.getTextContent());
-        doksysProperties.put("lbase", lbase.getTextContent());
-        doksysProperties.put("sbegin", sbegin.getTextContent());
-        doksysProperties.put("status", status.getTextContent());
+        for (String tag: doksysTagList) {
+            Element tagElement = extractSingleElement(doksysmeta, tag);
+            if (tagElement != null) {
+                doksysProperties.put(tag, tagElement.getTextContent());
+            }
+        }
         return doksysProperties;
     }
 
@@ -312,19 +324,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         Element myElanScenarios = extractSingleElement(elanmeta, TAG_ELANSCENARIOS);
         if (myElanScenarios != null) {
-
             NodeList myElanScenarioList = myElanScenarios.getChildNodes();
             List<String> sclist = new ArrayList<String>();
             for (int i = 0; i < myElanScenarioList.getLength(); i++) {
                 sclist.add(myElanScenarioList.item(i).getTextContent());
             }
-
             addScenariosfromDokpool(myDocpool, sclist);
         } else {
             addActiveScenariosfromDokpool(myDocpool);
         }
         elanProperties.put("scenarios", scenarios);
-
         return elanProperties;
     }
 
@@ -343,7 +352,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         List<String> creatorsList = new ArrayList<String>();
         // add irix system user for imports as default
         creatorsList.add(bfsIrixBrokerProperties.getProperty("irix-dokpool.USER"));
-
         Element myDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
         if (myDocumentOwner != null) {
             creatorsList.add(myDocumentOwner.getTextContent());
@@ -355,7 +363,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private boolean DocPoolClient() throws IrixBrokerException {
         success = true;
-
         String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
         String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
         String port = bfsIrixBrokerProperties.getProperty("irix-dokpool.PORT");
@@ -363,23 +370,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String documentOwner = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOLDOCUMENTOWNER");
         String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
         String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
-
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
 
         //connect to Dokpool using API (wsapi4plone/wsapi4elan)
         DocpoolBaseService docpoolBaseService = new DocpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
-
         // DocumentPool
         List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
         DocumentPool myDocpool = getMyDocpool(docpoolBaseService, myDocpools);
-
         //GroupFolder
         List<Folder> groupFolders = myDocpool.getGroupFolders();
         Folder myGroupFolder = getMyGroupFolder(docpoolBaseService, myDocpool);
-
-        /** hashmap to store the generic dokpool meta data
-         *
-         */
+        // hashmap to store the generic dokpool meta data
         Map<String, Object> docpoolProperties = new HashMap<String, Object>();
         docpoolProperties.put("title", title);
         docpoolProperties.put("description", desc);
@@ -388,10 +389,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docpoolProperties.put("docType", dt.getTextContent());
         docpoolProperties.putAll(setBehaviors(myDocpool));
         docpoolProperties.putAll(setSubjects());
-
         Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
-        log.info(d.getTitle());
-
+        //log.info(d.getTitle());
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys.getTextContent().equalsIgnoreCase("true")) {
@@ -412,15 +411,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         if (rei.getTextContent().equalsIgnoreCase("true")) {
             d.update(setReiProperties());
         }
-
         //DokpoolOwner to be used to change ownership of an created document
         Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
         if (!dokpoolDocumentOwner.getTextContent().equals("")) {
             d.update(setCreators(myDocpool));
         }
-
         // add attachements
-
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
             String aid = fet.get(i).getFileName();
@@ -444,7 +440,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             } catch (UnsupportedEncodingException uee){
                 throw new IrixBrokerException("Could not Upload Attachement: ", uee);
             }
-
         }
 
         if (Confidentiality.equals(ID_CONF)) {
@@ -454,7 +449,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
     public void addScenariosfromDokpool(DocumentPool dp) {
-
         List<Scenario> scen = dp.getScenarios();
         String[] sc = new String[scen.size()];
         for (int i = 0; i < scen.size(); i++)
@@ -463,20 +457,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
     public void addActiveScenariosfromDokpool(DocumentPool dp) {
-
         List<Scenario> scen = dp.getActiveScenarios();
         String[] sc = new String[scen.size()];
         for (int i = 0; i < scen.size(); i++) {
-
-
-
             sc[i] = scen.get(i).getId();
         }
         setScenarios(sc);
     }
 
     public void addScenariosfromDokpool(DocumentPool dp, String myscenario) {
-
         List<Scenario> scen = dp.getScenarios();
         String[] sc = new String[scen.size()];
         for (int i = 0; i < scen.size(); i++) {
@@ -491,7 +480,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
     public void addScenariosfromDokpool(DocumentPool dp, List<String> myscenarios) {
-
         List<Scenario> scen = dp.getScenarios();
         ArrayList<String> sc = new ArrayList<String>();
         for (int i = 0; i < scen.size(); i++) {
