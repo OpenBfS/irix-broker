@@ -6,6 +6,7 @@ package de.bfs.irixbroker;
 
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import java.time.ZonedDateTime;
 
 import java.lang.NullPointerException;
 
@@ -287,8 +288,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_NETWORKOPERATOR,
                 TAG_SAMPLETYPEID,
                 TAG_SAMPLETYPE,
+                TAG_SAMPLINGBEGIN,
+                TAG_SAMPLINGEND,
                 TAG_DOM,
                 TAG_DATATYPE,
+                TAG_INFOTYPE,
                 TAG_LEGALBASE,
                 TAG_MEASURINGPROGRAM,
                 TAG_STATUS,
@@ -297,18 +301,31 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_OPERATIONMODE,
                 TAG_TRAJECTORYSTARTLOCATION,
                 TAG_TRAJECTORYENDLOCATION,
-                TAG_TYPE
+                TAG_TRAJECTORYSTARTTIME,
+                TAG_TRAJECTORYENDTIME
         };
-        /*TAG_SAMPLINGBEGIN,
-        TAG_SAMPLINGEND,
-        TAG_TRAJECTORYSTARTTIME,
-        TAG_TRAJECTORYENDTIME,
-        */
+        List<String> doksysDatetimeTagList = Arrays.asList(
+                TAG_SAMPLINGBEGIN,
+                TAG_SAMPLINGEND,
+                TAG_TRAJECTORYSTARTTIME,
+                TAG_TRAJECTORYENDTIME
+        );
 
         for (String tag: doksysTagList) {
             Element tagElement = extractSingleElement(doksysmeta, tag);
             if (tagElement != null) {
-                doksysProperties.put(tag, tagElement.getTextContent());
+                if (doksysDatetimeTagList.contains(tag)) {
+                    try {
+                        String value = tagElement.getTextContent();
+                        ZonedDateTime zdt = ZonedDateTime.parse(value);
+                        GregorianCalendar gcalval = GregorianCalendar.from(zdt);
+                        doksysProperties.put(tag, gcalval.getTime());
+                    } catch(Exception gce) {
+                        log.error(gce);
+                    }
+                } else {
+                    doksysProperties.put(tag, tagElement.getTextContent());
+                }
             }
         }
         return doksysProperties;

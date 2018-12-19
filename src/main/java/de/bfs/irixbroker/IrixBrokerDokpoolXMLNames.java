@@ -40,7 +40,7 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_TRAJECTORYSTARTTIME = "TrajectoryStartTime";
 	String TAG_TRAJECTORYENDTIME = "TrajectoryEndTime";
 	String TAG_STATUS = "Status";
-	String TAG_TYPE = "Type";
+	String TAG_INFOTYPE = "InfoType";
 	String TAG_SAMPLINGBEGIN = "SamplingBegin";
 	String TAG_SAMPLINGEND = "SamplingEnd";
 	
