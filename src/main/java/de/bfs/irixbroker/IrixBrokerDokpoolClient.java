@@ -339,16 +339,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
          */
         Map<String, Object> elanProperties = new HashMap<String, Object>();
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
-        Element myElanScenarios = extractSingleElement(elanmeta, TAG_ELANSCENARIOS);
-        if (myElanScenarios != null) {
-            NodeList myElanScenarioList = myElanScenarios.getChildNodes();
-            List<String> sclist = new ArrayList<String>();
-            for (int i = 0; i < myElanScenarioList.getLength(); i++) {
-                sclist.add(myElanScenarioList.item(i).getTextContent());
+        if (elanmeta != null) {
+            Element myElanScenarios = extractSingleElement(elanmeta, TAG_ELANSCENARIOS);
+            if (myElanScenarios != null) {
+                NodeList myElanScenarioList = myElanScenarios.getChildNodes();
+                List<String> sclist = new ArrayList<String>();
+                for (int i = 0; i < myElanScenarioList.getLength(); i++) {
+                    sclist.add(myElanScenarioList.item(i).getTextContent());
+                }
+                addScenariosfromDokpool(myDocpool, sclist);
+            } else {
+                addActiveScenariosfromDokpool(myDocpool);
             }
-            addScenariosfromDokpool(myDocpool, sclist);
-        } else {
-            addActiveScenariosfromDokpool(myDocpool);
         }
         elanProperties.put("scenarios", scenarios);
         return elanProperties;
@@ -410,29 +412,30 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         //log.info(d.getTitle());
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
-        if (doksys.getTextContent().equalsIgnoreCase("true")) {
+        if (doksys != null && doksys.getTextContent().equalsIgnoreCase("true")) {
             d.update(setDoksysProperties());
         }
         // updating document with elan specific properties
         Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
-        if (elan.getTextContent().equalsIgnoreCase("true")) {
+        if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
             d.update(setElanProperties(myDocpool));
         }
         // updating document with elan specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
-        if (rodos.getTextContent().equalsIgnoreCase("true")) {
+        if (rodos != null && rodos.getTextContent().equalsIgnoreCase("true")) {
             d.update(setRodosProperties());
         }
         // updating document with rei specific properties
         Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
-        if (rei.getTextContent().equalsIgnoreCase("true")) {
+        if (rei != null && rei.getTextContent().equalsIgnoreCase("true")) {
             d.update(setReiProperties());
         }
         //DokpoolOwner to be used to change ownership of an created document
         Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
-        if (!dokpoolDocumentOwner.getTextContent().equals("")) {
+        /*if (dokpoolDocumentOwner != null && !dokpoolDocumentOwner.getTextContent().equals("")) {
             d.update(setCreators(myDocpool));
-        }
+        }*/
+        d.update(setCreators(myDocpool));
         // add attachements
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
