@@ -214,7 +214,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         //FIXME allow doksys as well - breaks Dokpool at the moment!
         for (String behaviorTag : behaviorsTagList) {
             Element element = extractSingleElement(dokpoolmeta, behaviorTag);
-            if (element.getTextContent().equalsIgnoreCase("true")) {
+            if (element != null && element.getTextContent().equalsIgnoreCase("true")) {
                 String behavior = element.getTagName().replaceFirst("^Is", "").toLowerCase();
                 behaviorsList.add(behavior);
             }
