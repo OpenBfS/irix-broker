@@ -26,7 +26,7 @@ import org.iaea._2012.irix.format.identification.IdentificationType;
 
 import de.bfs.dokpool.client.content.Document;
 import de.bfs.dokpool.client.content.DocumentPool;
-import de.bfs.dokpool.client.content.Scenario;
+import de.bfs.dokpool.client.content.Event;
 import de.bfs.dokpool.client.base.DocpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
@@ -42,8 +42,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private XMLGregorianCalendar DateTime;
     private String ReportContext;
     private String Confidentiality = "Free for Public Use";
-    private String scenario = "routinemode"; //first element from List EventIdentification
-    private String[] scenarios = {scenario}; //first element from List EventIdentification
+    private String event = "routinemode"; //first element from List EventIdentification
+    private String[] events = {event}; //first element from List EventIdentification
 
     private List<AnnotationType> annot;
     private List<FileEnclosureType> fet;
@@ -89,10 +89,10 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             eid = ident.getEventIdentifications().getEventIdentification();
             if (eid.isEmpty()) {
                 log.warn("No eventidentification found!!");
-                setScenario(scenario);
+                setEvent(event);
                 success = false;
             } else {
-                setScenario(eid.get(0).getValue());
+                setEvent(eid.get(0).getValue());
                 log.debug("eventidentification filled");
             }
         }
@@ -340,19 +340,20 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Map<String, Object> elanProperties = new HashMap<String, Object>();
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         if (elanmeta != null) {
-            Element myElanScenarios = extractSingleElement(elanmeta, TAG_ELANSCENARIOS);
-            if (myElanScenarios != null) {
-                NodeList myElanScenarioList = myElanScenarios.getChildNodes();
-                List<String> sclist = new ArrayList<String>();
-                for (int i = 0; i < myElanScenarioList.getLength(); i++) {
-                    sclist.add(myElanScenarioList.item(i).getTextContent());
+            Element myElanEvents = extractSingleElement(elanmeta, TAG_ELANEVENTS);
+            if (myElanEvents != null) {
+                NodeList myElanEventList = myElanEvents.getChildNodes();
+                List<String> evlist = new ArrayList<String>();
+                for (int i = 0; i < myElanEventList.getLength(); i++) {
+                    evlist.add(myElanEventList.item(i).getTextContent());
                 }
-                addScenariosfromDokpool(myDocpool, sclist);
+                addEventsfromDokpool(myDocpool, evlist);
             } else {
-                addActiveScenariosfromDokpool(myDocpool);
+                addActiveEventsfromDokpool(myDocpool);
             }
         }
-        elanProperties.put("scenarios", scenarios);
+        elanProperties.put("scenarios", events);
+        elanProperties.put("events", events);
         return elanProperties;
     }
 
@@ -468,49 +469,49 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return success;
     }
 
-    public void addScenariosfromDokpool(DocumentPool dp) {
-        List<Scenario> scen = dp.getScenarios();
-        String[] sc = new String[scen.size()];
-        for (int i = 0; i < scen.size(); i++)
-            sc[i] = scen.get(i).getId();
-        setScenarios(sc);
+    public void addEventsfromDokpool(DocumentPool dp) {
+        List<Event> events = dp.getEvents();
+        String[] ev = new String[events.size()];
+        for (int i = 0; i < events.size(); i++)
+            ev[i] = events.get(i).getId();
+        setEvents(ev);
     }
 
-    public void addActiveScenariosfromDokpool(DocumentPool dp) {
-        List<Scenario> scen = dp.getActiveScenarios();
-        String[] sc = new String[scen.size()];
-        for (int i = 0; i < scen.size(); i++) {
-            sc[i] = scen.get(i).getId();
+    public void addActiveEventsfromDokpool(DocumentPool dp) {
+        List<Event> events = dp.getActiveEvents();
+        String[] ev = new String[events.size()];
+        for (int i = 0; i < events.size(); i++) {
+            ev[i] = events.get(i).getId();
         }
-        setScenarios(sc);
+        setEvents(ev);
     }
 
-    public void addScenariosfromDokpool(DocumentPool dp, String myscenario) {
-        List<Scenario> scen = dp.getScenarios();
-        String[] sc = new String[scen.size()];
-        for (int i = 0; i < scen.size(); i++) {
-            if (scen.get(i).getId().equals(myscenario)) {
-                sc[i] = scen.get(i).getId();
+    public void addEventsfromDokpool(DocumentPool dp, String myevent) {
+        List<Event> events = dp.getEvents();
+        String[] ev = new String[events.size()];
+        for (int i = 0; i < events.size(); i++) {
+            if (events.get(i).getId().equals(myevent)) {
+                ev[i] = events.get(i).getId();
             }
         }
-        if (sc.length == 0) {
-            sc[0] = "routinemode";
+        if (ev.length == 0) {
+            ev[0] = "routinemode";
         }
-        setScenarios(sc);
+        setEvents(ev);
     }
 
-    public void addScenariosfromDokpool(DocumentPool dp, List<String> myscenarios) {
-        List<Scenario> scen = dp.getScenarios();
-        ArrayList<String> sc = new ArrayList<String>();
-        for (int i = 0; i < scen.size(); i++) {
-            if (myscenarios.contains(scen.get(i).getId())) {
-                sc.add(scen.get(i).getId());
+    public void addEventsfromDokpool(DocumentPool dp, List<String> myevents) {
+        List<Event> events = dp.getEvents();
+        ArrayList<String> ev = new ArrayList<String>();
+        for (int i = 0; i < events.size(); i++) {
+            if (myevents.contains(events.get(i).getId())) {
+                ev.add(events.get(i).getId());
             }
         }
-        if (sc.size() == 0) {
-            sc.add("routinemode");
+        if (ev.size() == 0) {
+            ev.add("routinemode");
         }
-        setScenarios(sc.toArray((new String[sc.size()])));
+        setEvents(ev.toArray((new String[ev.size()])));
     }
 
     public String getOrganisationReporting() {
@@ -545,20 +546,20 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Confidentiality = confidentiality;
     }
 
-    public String getScenario() {
-        return scenario;
+    public String getEvent() {
+        return event;
     }
 
-    public void setScenario(String scenario) {
-        this.scenario = scenario;
+    public void setEvent(String event) {
+        this.event = event;
     }
 
-    public String[] getScenarios() {
-        return scenarios;
+    public String[] getEvents() {
+        return events;
     }
 
-    public void setScenarios(String[] scenarios) {
-        this.scenarios = scenarios;
+    public void setEvents(String[] events) {
+        this.events = events;
     }
 
     public List<AnnotationType> getAnnot() {

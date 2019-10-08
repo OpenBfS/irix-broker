@@ -22,6 +22,8 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_REI = "REI";
 	String TAG_ELANSCENARIOS = "Scenarios";
 	String TAG_ELANSCENARIO = "Scenario";
+	String TAG_ELANEVENTS = "Scenarios";
+	String TAG_ELANEVENT = "Scenario";
 	String TAG_SUBJECTS = "Subjects";
 	String TAG_AREA = "Area";
 	String TAG_PURPOSE = "Purpose";
