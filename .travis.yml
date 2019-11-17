@@ -9,7 +9,7 @@ git:
 before_install:
   - rm ~/.m2/settings.xml
   - pwd
-  - cd .. && git clone --branch master --recursive https://github.com/OpenBfS/dokpool-javaclient.git && cd dokpool-javaclient && mvn clean compile package install && cd ../irix-broker
+  - cd .. && git clone --branch 2.x --recursive https://github.com/OpenBfS/dokpool-javaclient.git && cd dokpool-javaclient && mvn clean compile package install && cd ../irix-broker
 script:
   - mvn clean compile package install
 notifications:
