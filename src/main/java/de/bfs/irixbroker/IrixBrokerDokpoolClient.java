@@ -51,6 +51,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private String main_text = "<b>eingestellt durch IRIX-Broker</b>";
     private String ReportId;
     private Element dokpoolmeta; //DOM Element with the full dokpoolmeta information
+    private DokpoolMeta dokpoolMeta;
     private Properties bfsIrixBrokerProperties;
 
     private boolean success = false;
@@ -168,13 +169,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element myDocpoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
         List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
         Folder myGroupFolder = null;
-        try {
-            myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
-            renewGroupFolder = false;
-        } catch (NullPointerException e) {
-            // It's fine not to find a groufolder here
-            // TODO give warning falling back to system configuration for import
-            log.warn("Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
+        if (myDocpoolGroupFolder  == null) {
+            log.warn("Could not find Groupfolder in dokpoolmeta. Trying systemdefined Groupfolder.");
+        } else {
+            try {
+                myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
+                renewGroupFolder = false;
+            } catch (NullPointerException e) {
+                // It's fine not to find a groufolder here
+                // TODO give warning falling back to system configuration for import
+
+                log.warn("Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
+            }
         }
         if (renewGroupFolder) {
             try {
@@ -364,6 +370,38 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private Map<String, Object> setReiProperties(){
         Map<String, Object> reiProperties = new HashMap<String, Object>();
+        Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
+        String[] reiTagList = {
+                TAG_REVISION,
+                TAG_YEAR,
+                TAG_PERIOD,
+                TAG_MEDIUM,
+                TAG_ORIGIN,
+                TAG_AUTHORITY,
+                TAG_PDFVERSION
+        };
+        String [] reiListTagList = {
+                TAG_NUCLEARINSTALLATION,
+                TAG_REILEGALBASES,
+                TAG_MSTIDS
+        };
+        for (String tag: reiTagList) {
+            Element tagElement = extractSingleElement(reimeta, tag);
+            if (tagElement != null) {
+                reiProperties.put(tag, tagElement.getTextContent());
+            }
+        }
+        for (String tag: reiListTagList) {
+            Element tagElement = extractSingleElement(reimeta, tag);
+            if (tagElement != null) {
+                NodeList myReiTagList = tagElement.getChildNodes();
+                List<String> telist = new ArrayList<String>();
+                for (int i = 0; i < myReiTagList.getLength(); i++) {
+                    telist.add(myReiTagList.item(i).getTextContent());
+                }
+                reiProperties.put(tagElement.getTagName(), telist);
+            }
+        }
         return reiProperties;
     }
 
@@ -390,6 +428,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String documentOwner = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOLDOCUMENTOWNER");
         String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
         String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
+        //FIXME remove this static String
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
 
         //connect to Dokpool using API (wsapi4plone/wsapi4elan)
@@ -405,6 +444,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docpoolProperties.put("title", title);
         docpoolProperties.put("description", desc);
         docpoolProperties.put("text", main_text);
+        //WIP FIXME - here the problem seems to start or show up
         Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
         docpoolProperties.put("docType", dt.getTextContent());
         docpoolProperties.putAll(setBehaviors(myDocpool));
@@ -603,7 +643,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
     public static Element extractSingleElement(Element element, String elementName) {
-        // Kindelement mit dem gewünschten Tag-Namen abholen
+        // Kindelement mit dem gewünschten Tag-Namen abholen - does not support NS!
         final NodeList childElements = element.getElementsByTagName(elementName);
 
         // Anzahl der Ergebnisse abfragen

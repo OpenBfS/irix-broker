@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 
 public interface IrixBrokerDokpoolXMLNames {
-	
+
 	// Tag-Namen
 	String TAG_DOKPOOLNAME = "DokpoolName";
 	String TAG_DOKPOOLGROUPFOLDER = "DokpoolGroupFolder";
@@ -45,7 +45,17 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_INFOTYPE = "InfoType";
 	String TAG_SAMPLINGBEGIN = "SamplingBegin";
 	String TAG_SAMPLINGEND = "SamplingEnd";
-	
+	String TAG_REVISION = "Revision";
+	String TAG_YEAR = "Year";
+	String TAG_PERIOD = "Period";
+	String TAG_NUCLEARINSTALLATION = "NuclearInstallation";
+	String TAG_MEDIUM = "Medium";
+	String TAG_REILEGALBASES = "ReiLegalBases";
+	String TAG_ORIGIN = "Origin";
+	String TAG_MSTIDS = "MStIDs";
+	String TAG_AUTHORITY = "Authority";
+	String TAG_PDFVERSION = "PDFVersion";
+
 	// allowed mime types
 	String MT_PDF = "application/pdf";
 	String MT_PNG = "image/png";
@@ -56,7 +66,7 @@ public interface IrixBrokerDokpoolXMLNames {
 	String MT_WEBM = "video/webm";
 	List<String> MT_IMAGES = Arrays.asList(MT_JPEG, MT_JPG, MT_PNG);
 	List<String> MT_MOVIES = Arrays.asList(MT_MP4, MT_OGG, MT_WEBM);
-	
+
 	//used strings
 	String ID_CONF = "Free for Public Use";
 
