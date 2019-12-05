@@ -375,13 +375,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_REVISION,
                 TAG_YEAR,
                 TAG_PERIOD,
+                TAG_NUCLEARINSTALLATION,
                 TAG_MEDIUM,
                 TAG_ORIGIN,
                 TAG_AUTHORITY,
                 TAG_PDFVERSION
         };
         String [] reiListTagList = {
-                TAG_NUCLEARINSTALLATION,
                 TAG_REILEGALBASES,
                 TAG_MSTIDS
         };
