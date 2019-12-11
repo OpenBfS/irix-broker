@@ -371,20 +371,32 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private Map<String, Object> setReiProperties(){
         Map<String, Object> reiProperties = new HashMap<String, Object>();
         Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
+/*
         String[] reiTagList = {
                 TAG_REVISION,
                 TAG_YEAR,
                 TAG_PERIOD,
-                TAG_NUCLEARINSTALLATION,
                 TAG_MEDIUM,
-                TAG_ORIGIN,
                 TAG_AUTHORITY,
                 TAG_PDFVERSION
         };
-        String [] reiListTagList = {
-                TAG_REILEGALBASES,
-                TAG_MSTIDS
+*/
+        String[] reiTagList = {
+                "Revision",
+                "Year",
+                "Period",
+                "Medium",
+                "Authority",
+                "PDFVersion"
         };
+
+        String [] reiListTagList = {};
+/*        String [] reiListTagList = {
+                TAG_NUCLEARINSTALLATIONS,
+                TAG_REILEGALBASES,
+                TAG_ORIGINS,
+                TAG_MSTIDS
+        };*/
         for (String tag: reiTagList) {
             Element tagElement = extractSingleElement(reimeta, tag);
             if (tagElement != null) {

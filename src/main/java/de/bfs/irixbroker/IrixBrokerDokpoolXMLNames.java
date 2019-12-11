@@ -48,10 +48,10 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_REVISION = "Revision";
 	String TAG_YEAR = "Year";
 	String TAG_PERIOD = "Period";
-	String TAG_NUCLEARINSTALLATION = "NuclearInstallation";
+	String TAG_NUCLEARINSTALLATIONS = "NuclearInstallations";
 	String TAG_MEDIUM = "Medium";
 	String TAG_REILEGALBASES = "ReiLegalBases";
-	String TAG_ORIGIN = "Origin";
+	String TAG_ORIGINS = "Origins";
 	String TAG_MSTIDS = "MStIDs";
 	String TAG_AUTHORITY = "Authority";
 	String TAG_PDFVERSION = "PDFVersion";
