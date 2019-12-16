@@ -371,7 +371,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private Map<String, Object> setReiProperties(){
         Map<String, Object> reiProperties = new HashMap<String, Object>();
         Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
-/*
         String[] reiTagList = {
                 TAG_REVISION,
                 TAG_YEAR,
@@ -380,23 +379,20 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_AUTHORITY,
                 TAG_PDFVERSION
         };
-*/
-        String[] reiTagList = {
-                "Revision",
-                "Year",
-                "Period",
-                "Medium",
-                "Authority",
-                "PDFVersion"
-        };
-
-        String [] reiListTagList = {};
-/*        String [] reiListTagList = {
+        String [] reiListTagList = {
                 TAG_NUCLEARINSTALLATIONS,
                 TAG_REILEGALBASES,
-                TAG_ORIGINS,
+                TAG_ORIGINS
+        };
+        String [] reiSpecTagList = {
                 TAG_MSTIDS
-        };*/
+        };
+        for (String tag: reiSpecTagList) {
+            Element tagElement = extractSingleElement(reimeta, tag);
+            if (tagElement != null) {
+                reiProperties.put(tag, tagElement.getTextContent());
+            }
+        }
         for (String tag: reiTagList) {
             Element tagElement = extractSingleElement(reimeta, tag);
             if (tagElement != null) {
