@@ -32,6 +32,7 @@ import de.bfs.dokpool.client.content.Folder;
 
 import org.springframework.web.util.UrlPathHelper;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
@@ -390,7 +391,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         for (String tag: reiSpecTagList) {
             Element tagElement = extractSingleElement(reimeta, tag);
             if (tagElement != null) {
-                reiProperties.put(tag, tagElement.getTextContent());
+                NodeList myReiTagList = tagElement.getChildNodes();
+                List<String> telist = new ArrayList<String>();
+                for (int i = 0; i < myReiTagList.getLength(); i++) {
+                    // FIXME add support for MStName
+                    Node myMSt = myReiTagList.item(i);
+                    if (myMSt != null) {
+                        NodeList myMStList = myMSt.getChildNodes();
+                        telist.add(myMStList.item(0).getTextContent());
+                    }
+                }
+                reiProperties.put(tagElement.getTagName(), telist);
             }
         }
         for (String tag: reiTagList) {
