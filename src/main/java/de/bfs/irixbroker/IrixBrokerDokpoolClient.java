@@ -134,7 +134,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return true;
     }
 
-    private DocumentPool getMyDocpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools) {
+    private DocumentPool getMyDocpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools, Element dt) {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
@@ -161,6 +161,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return myDocpool;
     }
 
+/*    private DocumentPool getMyDocpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools) {
+        Element dt = new Element;
+        return getMyDocpool(docpoolBaseService, myDocpools, dt);
+    }*/
+
     private Folder getMyGroupFolder(DocpoolBaseService docpoolBaseService, DocumentPool myDocpool) {
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
@@ -174,12 +179,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             log.warn("Could not find Groupfolder in dokpoolmeta. Trying systemdefined Groupfolder.");
         } else {
             try {
-                myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
+                //myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
+                myGroupFolder = myDocpool.getFolder("content/Groups/" + myDocpoolGroupFolder.getTextContent());
                 renewGroupFolder = false;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here
                 // TODO give warning falling back to system configuration for import
-
                 log.warn("Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
             }
         }
@@ -190,7 +195,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here but suspicious
                 // TODO give warning falling back to first available groupfolder for import
-                log.warn("Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groufolder.");
+                log.warn("Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groupfolder.");
             }
         }
         if (renewGroupFolder && (myDocpools.size() > 0)) {
@@ -319,7 +324,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         );
 
         for (String tag: doksysTagList) {
-            Element tagElement = extractSingleElement(doksysmeta, tag);
+            log.debug(tag);
+            Element tagElement = null;
+            try {
+                tagElement = extractSingleElement(doksysmeta, tag);
+            } catch(Exception gce) {
+                log.error(gce);
+            }
             if (tagElement != null) {
                 if (doksysDatetimeTagList.contains(tag)) {
                     try {
@@ -447,6 +458,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String documentOwner = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOLDOCUMENTOWNER");
         String user = bfsIrixBrokerProperties.getProperty("irix-dokpool.USER");
         String pw = bfsIrixBrokerProperties.getProperty("irix-dokpool.PW");
+        Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
         //FIXME remove this static String
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
 
@@ -454,7 +466,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         DocpoolBaseService docpoolBaseService = new DocpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
         // DocumentPool
         List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
-        DocumentPool myDocpool = getMyDocpool(docpoolBaseService, myDocpools);
+        DocumentPool myDocpool = getMyDocpool(docpoolBaseService, myDocpools, dt);
         //GroupFolder
         List<Folder> groupFolders = myDocpool.getGroupFolders();
         Folder myGroupFolder = getMyGroupFolder(docpoolBaseService, myDocpool);
@@ -464,12 +476,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docpoolProperties.put("description", desc);
         docpoolProperties.put("text", main_text);
         //WIP FIXME - here the problem seems to start or show up
-        Element dt = extractSingleElement(dokpoolmeta, TAG_DOKPOOLCONTENTTYPE);
         docpoolProperties.put("docType", dt.getTextContent());
         docpoolProperties.putAll(setBehaviors(myDocpool));
         docpoolProperties.putAll(setSubjects());
+        log.info("Creating new Dokument in " + myGroupFolder.getFolderPath());
         Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
-        //log.info(d.getTitle());
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys != null && doksys.getTextContent().equalsIgnoreCase("true")) {
@@ -506,7 +517,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                         .replaceAll("[^\\x00-\\x7F]", "")
                         .replace("(", "")
                         .replace(")", "")
-                        .replace(" ", "");
+                        .replace(" ", "")
+                        .replace("/", "");
                 log.info("Anhang" + i + ": " + t);
                 if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
                     d.uploadImage(afn, t, t, fet.get(i).getEnclosedObject(), aid);
