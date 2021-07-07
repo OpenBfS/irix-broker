@@ -259,6 +259,14 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 }
             }
         }
+        NodeList mySubjectList = dokpoolmeta.getElementsByTagName(TAG_SUBJECT);
+        for (int i = 0; i <  mySubjectList.getLength(); i++) {
+            String mySubjectContent = mySubjectList.item(i).getTextContent().trim();
+            if (!mySubjectContent.isEmpty()) {
+                propertiesList.add(mySubjectContent);
+            }
+        }
+
         properties.put("subjects", propertiesList);
         return properties;
     }
@@ -294,27 +302,28 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private Map<String, Object> setDoksysProperties(){
         Map<String, Object> doksysProperties = new HashMap<String, Object>();
         Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
-        String[] doksysTagList = {
+        String[] doksysSingleTagList = {
                 TAG_AREA,
-                TAG_PURPOSE,
-                TAG_NETWORKOPERATOR,
-                TAG_SAMPLETYPEID,
-                TAG_SAMPLETYPE,
                 TAG_SAMPLINGBEGIN,
                 TAG_SAMPLINGEND,
-                TAG_DOM,
-                TAG_DATATYPE,
                 TAG_INFOTYPE,
-                TAG_LEGALBASE,
-                TAG_MEASURINGPROGRAM,
                 TAG_STATUS,
                 TAG_DURATION,
-                TAG_MEASUREMENTCATEGORY,
                 TAG_OPERATIONMODE,
                 TAG_TRAJECTORYSTARTLOCATION,
                 TAG_TRAJECTORYENDLOCATION,
                 TAG_TRAJECTORYSTARTTIME,
                 TAG_TRAJECTORYENDTIME
+        };
+        String[] doksysListTagList = {
+                TAG_PURPOSE,
+                TAG_NETWORKOPERATOR,
+                TAG_SAMPLETYPE,
+                TAG_DOM,
+                TAG_DATASOURCE,
+                TAG_LEGALBASE,
+                TAG_MEASURINGPROGRAM,
+                TAG_MEASUREMENTCATEGORY,
         };
         List<String> doksysDatetimeTagList = Arrays.asList(
                 TAG_SAMPLINGBEGIN,
@@ -323,7 +332,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_TRAJECTORYENDTIME
         );
 
-        for (String tag: doksysTagList) {
+        for (String tag: doksysSingleTagList) {
             log.debug(tag);
             Element tagElement = null;
             try {
@@ -346,6 +355,23 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 }
             }
         }
+        for (String tag: doksysListTagList) {
+            log.debug(tag);
+            NodeList tagElements = null;
+            try {
+                tagElements = extractElementNodelist(doksysmeta, tag);
+            } catch(Exception gce) {
+                log.error(gce);
+            }
+            if (tagElements != null) {
+                List<String> telist = new ArrayList<String>();
+                for (int i = 0; i < tagElements.getLength(); i++) {
+                    telist.add(tagElements.item(i).getTextContent());
+                }
+                doksysProperties.put(tag, telist);
+            }
+        }
+
         return doksysProperties;
     }
 
@@ -359,11 +385,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         if (elanmeta != null) {
             Element myElanEvents = extractSingleElement(elanmeta, TAG_ELANEVENTS);
-            if (myElanEvents != null) {
-                NodeList myElanEventList = myElanEvents.getChildNodes();
+            NodeList myElanEventList = extractElementNodelist(elanmeta, TAG_ELANEVENT);
+            if (myElanEventList != null) {
                 List<String> evlist = new ArrayList<String>();
                 for (int i = 0; i < myElanEventList.getLength(); i++) {
                     evlist.add(myElanEventList.item(i).getTextContent());
+                }
+                addEventsfromDokpool(myDocpool, evlist);
+            } else if (myElanEvents != null) {
+                NodeList myElanEventsList = myElanEvents.getChildNodes();
+                List<String> evlist = new ArrayList<String>();
+                for (int i = 0; i < myElanEventsList.getLength(); i++) {
+                    evlist.add(myElanEventsList.item(i).getTextContent());
                 }
                 addEventsfromDokpool(myDocpool, evlist);
             } else {
@@ -392,12 +425,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_PDFVERSION
         };
         String [] reiListTagList = {
-                TAG_NUCLEARINSTALLATIONS,
-                TAG_REILEGALBASES,
-                TAG_ORIGINS
+                TAG_NUCLEARINSTALLATION,
+                TAG_REILEGALBASE,
+                TAG_ORIGIN
         };
         String [] reiSpecTagList = {
-                TAG_MSTIDS
+                TAG_MST
         };
         for (String tag: reiSpecTagList) {
             Element tagElement = extractSingleElement(reimeta, tag);
@@ -692,6 +725,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
         // Das erste Kindelement zur�ck geben
         return (Element) childElements.item(0);
+    }
+
+    public static NodeList extractElementNodelist(Element element, String elementChildName) {
+        // Kindelement mit dem gewünschten Tag-Namen abholen - does not support NS!
+        final NodeList childElements = element.getElementsByTagName(elementChildName);
+        if (childElements.getLength() > 0) {
+            return childElements;
+        } else  {
+            return null;
+        }
     }
 
     /**

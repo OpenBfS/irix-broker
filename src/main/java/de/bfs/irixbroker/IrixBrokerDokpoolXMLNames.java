@@ -25,14 +25,14 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_ELANEVENTS = "Scenarios";
 	String TAG_ELANEVENT = "Scenario";
 	String TAG_SUBJECTS = "Subjects";
+	String TAG_SUBJECT = "Subject";
 	String TAG_AREA = "Area";
 	String TAG_PURPOSE = "Purpose";
 	String TAG_DURATION = "Duration";
 	String TAG_NETWORKOPERATOR = "NetworkOperator" ;
-	String TAG_SAMPLETYPEID = "SampleTypeId";
 	String TAG_SAMPLETYPE = "SampleType";
 	String TAG_DOM = "Dom";
-	String TAG_DATATYPE = "DataType";
+	String TAG_DATASOURCE = "DataSource";
 	String TAG_LEGALBASE = "LegalBase";
 	String TAG_MEASURINGPROGRAM = "MeasuringProgram";
 	String TAG_MEASUREMENTCATEGORY = "MeasurementCategory";
@@ -48,11 +48,11 @@ public interface IrixBrokerDokpoolXMLNames {
 	String TAG_REVISION = "Revision";
 	String TAG_YEAR = "Year";
 	String TAG_PERIOD = "Period";
-	String TAG_NUCLEARINSTALLATIONS = "NuclearInstallations";
+	String TAG_NUCLEARINSTALLATION = "NuclearInstallation";
 	String TAG_MEDIUM = "Medium";
-	String TAG_REILEGALBASES = "ReiLegalBases";
-	String TAG_ORIGINS = "Origins";
-	String TAG_MSTIDS = "MStIDs";
+	String TAG_REILEGALBASE = "ReiLegalBase";
+	String TAG_ORIGIN= "Origin";
+	String TAG_MST = "MSt";
 	String TAG_AUTHORITY = "Authority";
 	String TAG_PDFVERSION = "PDFVersion";
 
