@@ -58,13 +58,14 @@ public interface IrixBrokerDokpoolXMLNames {
 
 	// allowed mime types
 	String MT_PDF = "application/pdf";
+	String MT_GIF = "image/gif";
 	String MT_PNG = "image/png";
 	String MT_JPG = "image/jpg";
 	String MT_JPEG = "image/jpeg";
 	String MT_MP4 = "video/mp4";
 	String MT_OGG = "video/ogg";
 	String MT_WEBM = "video/webm";
-	List<String> MT_IMAGES = Arrays.asList(MT_JPEG, MT_JPG, MT_PNG);
+	List<String> MT_IMAGES = Arrays.asList(MT_GIF, MT_JPEG, MT_JPG, MT_PNG);
 	List<String> MT_MOVIES = Arrays.asList(MT_MP4, MT_OGG, MT_WEBM);
 
 	//used strings
