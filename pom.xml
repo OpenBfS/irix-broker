@@ -5,7 +5,7 @@
     <groupId>de.bfs</groupId>
     <artifactId>bfs-irixbroker</artifactId>
     <packaging>jar</packaging>
-    <version>2.8-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
     <name>BfS broker to extend irix-webservice</name>
     <organization>
         <name>German Federal Office for Radiation Protection</name>
@@ -21,10 +21,15 @@
     <url>http://www.bfs.de</url>
     <dependencies>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+            <version>2.20.0</version>
         </dependency>
+        <!--<dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.20.0</version>
+        </dependency>-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -49,9 +54,39 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>javax.xml.ws</groupId>
+            <artifactId>jaxws-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-rt</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.jws</groupId>
+            <artifactId>javax.jws-api</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>4.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>4.0.3</version>
+        </dependency>
+        <dependency>
             <groupId>de.bfs</groupId>
             <artifactId>dokpool-client</artifactId>
-            <version>2.3-SNAPSHOT</version>
+            <version>3.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
@@ -60,7 +95,7 @@
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
                 <artifactId>maven-jaxb2-plugin</artifactId>
-                <version>0.12.3</version>
+                <version>0.15.3</version>
                 <executions>
                     <execution>
                         <goals>
@@ -121,7 +156,7 @@
         </plugins>
     </build>
     <properties>
-        <project.custom.java.version>1.8</project.custom.java.version>
+        <project.custom.java.version>11</project.custom.java.version>
         <maven.compiler.source>${project.custom.java.version}</maven.compiler.source>
         <maven.compiler.target>${project.custom.java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
