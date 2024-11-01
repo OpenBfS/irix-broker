@@ -30,7 +30,6 @@ import de.bfs.dokpool.client.content.Event;
 import de.bfs.dokpool.client.base.DocpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
-import org.springframework.web.util.UrlPathHelper;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
