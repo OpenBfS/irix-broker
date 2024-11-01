@@ -190,7 +190,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         }
         if (renewGroupFolder) {
             try {
-                myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + ploneGroupFolder);
+                myGroupFolder = myDocpool.getFolder("content/Groups/" + ploneGroupFolder);
                 renewGroupFolder = false;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here but suspicious
