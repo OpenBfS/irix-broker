@@ -15,7 +15,6 @@ import java.net.URLEncoder;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import de.bfs.irix.extensions.dokpool.DokpoolMeta;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
