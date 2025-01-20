@@ -9,13 +9,16 @@ package de.bfs.irixbroker;
  *
  */
 import java.io.*;
+
+//still part of Java 21
 import javax.xml.XMLConstants;
-import javax.xml.bind.*;
 import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.*;
 import javax.xml.validation.Validator;
+
+import jakarta.xml.bind.*;
 import org.xml.sax.SAXException;
 
 /**

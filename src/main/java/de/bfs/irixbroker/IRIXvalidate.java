@@ -3,9 +3,11 @@
  */
 package de.bfs.irixbroker;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
+
 import org.iaea._2012.irix.format.*;
 import org.iaea._2012.irix.format.ReportType;
+
 import org.xml.sax.SAXException;
 
 /**

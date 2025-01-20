@@ -14,11 +14,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+
+//still part of Java 21
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.log4j.Logger;
 

@@ -12,6 +12,7 @@ import java.lang.NullPointerException;
 
 import java.net.URLEncoder;
 
+//still part of Java 21
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import de.bfs.irix.extensions.dokpool.DokpoolMeta;

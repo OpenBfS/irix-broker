@@ -11,7 +11,9 @@ import org.iaea._2012.irix.format.annexes.FileEnclosureType;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+//still part of Java 21
 import javax.xml.datatype.XMLGregorianCalendar;
+
 import java.util.List;
 import java.util.Properties;
 

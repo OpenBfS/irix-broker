@@ -13,9 +13,11 @@ import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.util.List;
 
+//still part of Java 21
 import javax.xml.XMLConstants;
-import javax.xml.bind.*;
 import javax.xml.validation.*;
+
+import jakarta.xml.bind.*;
 
 import org.xml.sax.SAXException;
 import org.iaea._2012.irix.format.*;
