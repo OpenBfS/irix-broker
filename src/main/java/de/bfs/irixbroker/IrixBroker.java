@@ -6,15 +6,13 @@ package de.bfs.irixbroker;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import static java.lang.System.Logger.Level.DEBUG;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
 import org.iaea._2012.irix.format.identification.ReportingBasesType;
 
 import jakarta.annotation.Resource;
 import jakarta.xml.ws.WebServiceContext;
-import jakarta.xml.ws.handler.MessageContext;
 
 /**
  * @author Peter Bieringer, Marco Lechner
@@ -26,7 +24,7 @@ import jakarta.xml.ws.handler.MessageContext;
 
 public class IrixBroker {
 
-    private static Logger log = Logger.getLogger(IrixBroker.class);
+    private static System.Logger log = System.getLogger(IrixBroker.class.getName());
 
     @Resource
     private WebServiceContext context;
@@ -51,7 +49,7 @@ public class IrixBroker {
     }
 
     /**
-     * Get servlet context and initialize log4j and other parameters from
+     * Get servlet context and initialize logging backend (e.g. log4j) and other parameters from
      * configuration in web.xml.
      *
      * @throws IrixBrokerException if the servlet context cannot be obtained.
@@ -91,39 +89,39 @@ public class IrixBroker {
                 if (b.equals("ESD")) {
                     IrixBrokerDokpoolClient iec = new IrixBrokerDokpoolClient(bfsIBP);
                     iec.sendToDocpool(report);
-                    log.debug(iec.getReportContext());
-                    log.debug("iec created");
+                    log.log(DEBUG, iec.getReportContext());
+                    log.log(DEBUG, "iec created");
                 }
                 //data for VDB
                 if (b.equals("VDB")) {
                     //IrixBrokerVDBClient ivc = new IrixBrokerVDBClient(report);
                     //ivc.sendToVDB();
-                    log.debug("TODO: create IrixBrokerVDBClient");
+                    log.log(DEBUG, "TODO: create IrixBrokerVDBClient");
                 }
                 //data for IAEA/USIE
                 if (b.equals("IAEA")) {
                     IrixBrokerIAEAClient iic = new IrixBrokerIAEAClient(bfsIBP);
                     iic.sendToIAEA(report);
-                    log.debug(iic.getReportContext());
-                    log.debug("IrixBrokerIAEAClient created");
-                    log.debug("TODO: implement workflow in IrixBrokerIAEAClient");
+                    log.log(DEBUG, iic.getReportContext());
+                    log.log(DEBUG, "IrixBrokerIAEAClient created");
+                    log.log(DEBUG, "TODO: implement workflow in IrixBrokerIAEAClient");
                 }
                 //data for EU/ECURIE
                 if (b.equals("EU")) {
                     IrixBrokerEUClient ieuc = new IrixBrokerEUClient(bfsIBP);
                     ieuc.sendToEU(report);
-                    log.debug(ieuc.getReportContext());
-                    log.debug("IrixBrokerEUClient created");
-                    log.debug("TODO: implement workflow in IrixBrokerEUClient");
+                    log.log(DEBUG, ieuc.getReportContext());
+                    log.log(DEBUG, "IrixBrokerEUClient created");
+                    log.log(DEBUG, "TODO: implement workflow in IrixBrokerEUClient");
                 }
                 //data for federal state Baden-Wuerttemberg (BW, ...)
                 //FIXME could this be done more generic and robust?
                 if (b.startsWith("BL_")) {
                     String bl = b.replaceFirst("^BL_", "");
-                    log.debug("BL extracted: " + bl);
+                    log.log(DEBUG, "BL extracted: " + bl);
                     IrixBrokerBLClient iblc = new IrixBrokerBLClient(bfsIBP);
                     iblc.sendToBL(report, bl);
-                    log.debug("TODO: create IrixBrokerBLClient");
+                    log.log(DEBUG, "TODO: create IrixBrokerBLClient");
                 }
             }
         }
@@ -138,7 +136,7 @@ public class IrixBroker {
      * @throws IrixBrokerException if the directory cannot be created.
      */
     protected void testRecipientConnection() throws IrixBrokerException {
-        log.debug("Testing if recipient is available.");
+        log.log(DEBUG, "Testing if recipient is available.");
     }
 
     /** TODO add void main() to make it usable via CLI */

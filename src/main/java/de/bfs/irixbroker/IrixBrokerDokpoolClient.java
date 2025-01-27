@@ -16,7 +16,10 @@ import java.net.URLEncoder;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import de.bfs.irix.extensions.dokpool.DokpoolMeta;
-import org.apache.log4j.Logger;
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.WARNING;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.INFO;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnexesType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
@@ -36,7 +39,7 @@ import org.w3c.dom.NodeList;
 
 public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
-    private static Logger log = Logger.getLogger(IrixBrokerDokpoolClient.class);
+    private static System.Logger log = System.getLogger(IrixBrokerDokpoolClient.class.getName());
 
     private String OrganisationReporting;
     private XMLGregorianCalendar DateTime;
@@ -89,12 +92,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         if (ident.getEventIdentifications() != null) {
             eid = ident.getEventIdentifications().getEventIdentification();
             if (eid.isEmpty()) {
-                log.warn("No eventidentification found!!");
+                log.log(WARNING, "No eventidentification found!!");
                 setEvent(event);
                 success = false;
             } else {
                 setEvent(eid.get(0).getValue());
-                log.debug("eventidentification filled");
+                log.log(DEBUG, "eventidentification filled");
             }
         }
         return success;
@@ -175,7 +178,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
         Folder myGroupFolder = null;
         if (myDocpoolGroupFolder  == null) {
-            log.warn("Could not find Groupfolder in dokpoolmeta. Trying systemdefined Groupfolder.");
+            log.log(WARNING, "Could not find Groupfolder in dokpoolmeta. Trying systemdefined Groupfolder.");
         } else {
             try {
                 //myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
@@ -184,7 +187,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here
                 // TODO give warning falling back to system configuration for import
-                log.warn("Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
+                log.log(WARNING, "Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
             }
         }
         if (renewGroupFolder) {
@@ -194,7 +197,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here but suspicious
                 // TODO give warning falling back to first available groupfolder for import
-                log.warn("Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groupfolder.");
+                log.log(WARNING, "Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groupfolder.");
             }
         }
         if (renewGroupFolder && (myDocpools.size() > 0)) {
@@ -332,12 +335,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         );
 
         for (String tag: doksysSingleTagList) {
-            log.debug(tag);
+            log.log(DEBUG, tag);
             Element tagElement = null;
             try {
                 tagElement = extractSingleElement(doksysmeta, tag);
             } catch(Exception gce) {
-                log.error(gce);
+                log.log(ERROR, gce);
             }
             if (tagElement != null) {
                 if (doksysDatetimeTagList.contains(tag)) {
@@ -347,7 +350,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                         GregorianCalendar gcalval = GregorianCalendar.from(zdt);
                         doksysProperties.put(tag, gcalval.getTime());
                     } catch(Exception gce) {
-                        log.error(gce);
+                        log.log(ERROR, gce);
                     }
                 } else {
                     doksysProperties.put(tag, tagElement.getTextContent());
@@ -355,12 +358,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             }
         }
         for (String tag: doksysListTagList) {
-            log.debug(tag);
+            log.log(DEBUG, tag);
             NodeList tagElements = null;
             try {
                 tagElements = extractElementNodelist(doksysmeta, tag);
             } catch(Exception gce) {
-                log.error(gce);
+                log.log(ERROR, gce);
             }
             if (tagElements != null) {
                 List<String> telist = new ArrayList<String>();
@@ -511,7 +514,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docpoolProperties.put("docType", dt.getTextContent());
         docpoolProperties.putAll(setBehaviors(myDocpool));
         docpoolProperties.putAll(setSubjects());
-        log.info("Creating new Dokument in " + myGroupFolder.getFolderPath());
+        log.log(INFO, "Creating new Dokument in " + myGroupFolder.getFolderPath());
         Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
@@ -551,7 +554,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                         .replace(")", "")
                         .replace(" ", "")
                         .replace("/", "");
-                log.info("Anhang" + i + ": " + t);
+                log.log(INFO, "Anhang" + i + ": " + t);
                 if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
                     d.uploadImage(afn, t, t, fet.get(i).getEnclosedObject(), aid);
                 }

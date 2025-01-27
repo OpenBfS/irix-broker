@@ -8,7 +8,7 @@ import java.util.*;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.log4j.Logger;
+import static java.lang.System.Logger.Level.DEBUG;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
 import org.iaea._2012.irix.format.annexes.FileEnclosureType;
@@ -18,7 +18,7 @@ import org.w3c.dom.NodeList;
 
 public class IrixBrokerBLClient implements IrixBrokerDokpoolXMLNames {
 
-    private static Logger log = Logger.getLogger(IrixBrokerBLClient.class);
+    private static System.Logger log = System.getLogger(IrixBrokerBLClient.class.getName());
 
     private String OrganisationReporting;
     private XMLGregorianCalendar DateTime;
@@ -56,7 +56,7 @@ public class IrixBrokerBLClient implements IrixBrokerDokpoolXMLNames {
         success = true;
 
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
-        log.debug("No delivery workflow implemented for BL");
+        log.log(DEBUG, "No delivery workflow implemented for BL");
 
         return success;
     }

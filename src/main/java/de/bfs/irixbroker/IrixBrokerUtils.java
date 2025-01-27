@@ -22,7 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import jakarta.xml.bind.DatatypeConverter;
 
-import org.apache.log4j.Logger;
+import static java.lang.System.Logger.Level.ERROR;
 
 
 
@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
  *
  */
 public final class IrixBrokerUtils {
-    private static Logger log = Logger.getLogger(IrixBrokerUtils.class);
+    private static System.Logger log = System.getLogger(IrixBrokerUtils.class.getName());
     private IrixBrokerUtils() {
         // hidden constructor to avoid instantiation.
     }
@@ -56,7 +56,7 @@ public final class IrixBrokerUtils {
             date.setFractionalSecond(null);
             return date;
         } catch (DatatypeConfigurationException e) {
-            log.error("Exception converting to XMLGregorianCalendar");
+            log.log(ERROR, "Exception converting to XMLGregorianCalendar");
             return null;
         }
     }

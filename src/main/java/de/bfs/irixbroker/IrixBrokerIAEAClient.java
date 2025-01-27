@@ -4,7 +4,7 @@
 
 package de.bfs.irixbroker;
 
-import org.apache.log4j.Logger;
+import static java.lang.System.Logger.Level.DEBUG;
 import org.iaea._2012.irix.format.ReportType;
 import org.iaea._2012.irix.format.annexes.AnnotationType;
 import org.iaea._2012.irix.format.annexes.FileEnclosureType;
@@ -19,7 +19,7 @@ import java.util.Properties;
 
 public class IrixBrokerIAEAClient implements IrixBrokerDokpoolXMLNames {
 
-    private static Logger log = Logger.getLogger(IrixBrokerIAEAClient.class);
+    private static System.Logger log = System.getLogger(IrixBrokerIAEAClient.class.getName());
 
     private String OrganisationReporting;
     private XMLGregorianCalendar DateTime;
@@ -56,7 +56,7 @@ public class IrixBrokerIAEAClient implements IrixBrokerDokpoolXMLNames {
         success = true;
 
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
-        log.debug("No delivery workflow implemented for EU");
+        log.log(DEBUG, "No delivery workflow implemented for EU");
 
         return success;
     }
