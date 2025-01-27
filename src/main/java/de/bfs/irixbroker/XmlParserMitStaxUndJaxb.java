@@ -60,7 +60,7 @@ public class XmlParserMitStaxUndJaxb
     * Hilfsmethode zum Parsen grosser XML-Dateien (durch Kombination von JAXB mit StAX).<br>
     * Es koennen alle im angegebenen Package vorhandenen Klassen geparst werden, welche eine XmlRootElement-Annotation haben.<br>
     * <b>Achtung:</b> Zum XML-Reader wird normalerweise kein close() aufgerufen, ausser siehe Bug:
-    * {@link http://bugs.sun.com/view_bug.do?bug_id=6539065}
+    * <a href="http://bugs.sun.com/view_bug.do?bug_id=6539065">http://bugs.sun.com/view_bug.do?bug_id=6539065</a>
     *
     * @param  xml         Reader zur XML-Datei
     * @param  packageName Package mit den zu lesenden Java-Klassen
@@ -97,7 +97,7 @@ public class XmlParserMitStaxUndJaxb
     * Hilfsmethode zum Parsen grosser XML-Dateien (durch Kombination von JAXB mit StAX).<br>
     * Es kann nur die eine angegebene Klasse geparst werden (eine XmlRootElement-Annotation wird nicht benoetigt).<br>
     * <b>Achtung:</b> Zum XML-Reader wird normalerweise kein close() aufgerufen, ausser siehe Bug:
-    * {@link http://bugs.sun.com/view_bug.do?bug_id=6539065}
+    * <a href="http://bugs.sun.com/view_bug.do?bug_id=6539065">http://bugs.sun.com/view_bug.do?bug_id=6539065</a>
     *
     * @param  xml          Reader zur XML-Datei
     * @param  elementClass Die zu parsende Java-Klasse
