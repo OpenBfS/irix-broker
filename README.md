@@ -13,6 +13,7 @@ The entry method for IRIXBroker is `deliverIrixBroker(ReportType report)` in [Ir
 
 further information:
  - [Changelog](Changelog.md)
+ - [License](LICENSE)
 
 ## Building
 
