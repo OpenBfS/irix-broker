@@ -411,7 +411,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
     private Map<String, Object> setRodosProperties(){
-        Map<String, Object> rodosProperties = new HashMap<String, Object>();
+        Map<String, Object> rodosProperties;
+        Element rodosmeta = extractSingleElement(dokpoolmeta, TAG_RODOS);
+        if (rodosmeta != null) {
+            rodosProperties = extractChildElementsAsMap(rodosmeta);
+        } else {
+            rodosProperties = new HashMap<String, Object>();
+        }
         return rodosProperties;
     }
 
@@ -526,7 +532,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
             d.update(setElanProperties(myDocpool));
         }
-        // updating document with elan specific properties
+        // updating document with rodos specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
         if (rodos != null && rodos.getTextContent().equalsIgnoreCase("true")) {
             d.update(setRodosProperties());
@@ -737,6 +743,21 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         } else  {
             return null;
         }
+    }
+
+    public static Map<String,Object> extractChildElementsAsMap(Element parent) {
+        Map<String, Object> childrenMap = new HashMap<String, Object>();
+        NodeList childNodes = parent.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node chNode = childNodes.item(i);
+            if (chNode.getNodeType() == Node.ELEMENT_NODE) {
+                //for element nodes:
+                //getNodeName() == getTagName()
+                //getTextContent() == concatenation of (text node) children
+                childrenMap.put(chNode.getNodeName(), chNode.getTextContent());
+            }
+        }
+        return childrenMap;
     }
 
     /**
