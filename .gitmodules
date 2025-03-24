@@ -1,3 +1,3 @@
 [submodule "irix-schema"]
 	path = src/main/resources/irix-schema
-	url = https://github.com/OpenBfS/irix-dokpool-schema.git
+	url = ../irix-dokpool-schema.git
