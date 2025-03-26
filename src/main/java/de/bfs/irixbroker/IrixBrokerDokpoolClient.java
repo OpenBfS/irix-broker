@@ -561,14 +561,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                         .replace(" ", "")
                         .replace("/", "");
                 log.log(INFO, "Anhang" + i + ": " + t);
-                if (MT_IMAGES.contains(fet.get(i).getMimeType())) {
-                    d.uploadImage(afn, t, t, fet.get(i).getEnclosedObject(), aid);
+                String mimeType = fet.get(i).getMimeType();
+                if (MT_IMAGES.contains(mimeType)) {
+                    d.uploadImage(afn, t, t, fet.get(i).getEnclosedObject(), aid, mimeType);
                 }
                 // TODO separate handling of movie files
-                else if (MT_MOVIES.contains(fet.get(i).getMimeType())) {
-                    d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid);
+                else if (MT_MOVIES.contains(mimeType)) {
+                    d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid, mimeType);
                 } else {
-                    d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid);
+                    d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid, mimeType);
                 }
             } catch (UnsupportedEncodingException uee){
                 throw new IrixBrokerException("Could not Upload Attachement: ", uee);
