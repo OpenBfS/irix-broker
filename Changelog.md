@@ -2,6 +2,11 @@
 
 ## Version 3.x
 
+### 3.2.0 *2025-03-27*
+
+ - pass on mimetype to dokpool-client
+ - update rodos properties and pass everything rodos on to dokpool-client (also 3.2.0)
+
 ### 3.1 *2025-01-27*
 
  - jaxws, javax.xml.bind, jaxb to current versions (libs and plugins)
