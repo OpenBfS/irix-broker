@@ -1,3 +1,9 @@
+/* Copyright (C) 2015-2025 by Bundesamt fuer Strahlenschutz
+ *
+ * This file is Free Software under the GNU GPL (v>=3)
+ * and comes with ABSOLUTELY NO WARRANTY!
+ * See LICENSE for details.
+ */
 /**
  * @authors bp-fr, lem-fr - German Federal Office for Radiation Protection www.bfs.de
  */
@@ -5,10 +11,14 @@
 package de.bfs.irixbroker;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.time.ZonedDateTime;
-
-import java.lang.NullPointerException;
 
 import java.net.URLEncoder;
 
@@ -70,8 +80,8 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         success = readAnnexes(report.getAnnexes());
         try {
             success = DocPoolClient();
-        } catch (Exception e){
-            throw new IrixBrokerException( "DocPoolClient() not working as expected: ", e);
+        } catch (Exception e) {
+            throw new IrixBrokerException("DocPoolClient() not working as expected: ", e);
         }
         return success;
     }
@@ -242,7 +252,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
 
-    private Map<String, Object> setSubjects(){
+    private Map<String, Object> setSubjects() {
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> propertiesList = new ArrayList<String>();
         getDoksysSubjects(propertiesList);
@@ -273,35 +283,35 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return properties;
     }
 
-    private void getDoksysSubjects(List<String> propertiesList){
+    private void getDoksysSubjects(List<String> propertiesList) {
 
         Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
         //Element foo = extractSingleElement(doksysmeta, TAG_FOO);
         //propertiesList.add("no DOKSYS subjects");
     }
 
-    private void getElanSubjects(List<String> propertiesList){
+    private void getElanSubjects(List<String> propertiesList) {
 
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         //Element foo = extractSingleElement(elanmeta, TAG_FOO);
         //propertiesList.add("no ELAN subjects");
     }
 
-    private void getRodosSubjects(List<String> propertiesList){
+    private void getRodosSubjects(List<String> propertiesList) {
 
         Element rodosmeta = extractSingleElement(dokpoolmeta, TAG_RODOS);
         //Element foo = extractSingleElement(rodosmeta, TAG_FOO);
         //propertiesList.add("no RODOS subjects");
     }
 
-    private void getReiSubjects(List<String> propertiesList){
+    private void getReiSubjects(List<String> propertiesList) {
 
         Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
         //Element foo = extractSingleElement(reimeta, TAG_FOO);
         //propertiesList.add("no REI subjects");
     }
 
-    private Map<String, Object> setDoksysProperties(){
+    private Map<String, Object> setDoksysProperties() {
         Map<String, Object> doksysProperties = new HashMap<String, Object>();
         Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
         String[] doksysSingleTagList = {
@@ -339,7 +349,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             Element tagElement = null;
             try {
                 tagElement = extractSingleElement(doksysmeta, tag);
-            } catch(Exception gce) {
+            } catch (Exception gce) {
                 log.log(ERROR, gce);
             }
             if (tagElement != null) {
@@ -349,7 +359,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                         ZonedDateTime zdt = ZonedDateTime.parse(value);
                         GregorianCalendar gcalval = GregorianCalendar.from(zdt);
                         doksysProperties.put(tag, gcalval.getTime());
-                    } catch(Exception gce) {
+                    } catch (Exception gce) {
                         log.log(ERROR, gce);
                     }
                 } else {
@@ -362,7 +372,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             NodeList tagElements = null;
             try {
                 tagElements = extractElementNodelist(doksysmeta, tag);
-            } catch(Exception gce) {
+            } catch (Exception gce) {
                 log.log(ERROR, gce);
             }
             if (tagElements != null) {
@@ -377,7 +387,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return doksysProperties;
     }
 
-    private Map<String, Object> setElanProperties(DocumentPool myDocpool){
+    private Map<String, Object> setElanProperties(DocumentPool myDocpool) {
         /** point the new Dokument to active or referenced scenarios of the dokpool
          * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
          * and are active. If no scenarios are referenced in the request add all active
@@ -410,7 +420,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return elanProperties;
     }
 
-    private Map<String, Object> setRodosProperties(){
+    private Map<String, Object> setRodosProperties() {
         Map<String, Object> rodosProperties;
         Element rodosmeta = extractSingleElement(dokpoolmeta, TAG_RODOS);
         if (rodosmeta != null) {
@@ -421,7 +431,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return rodosProperties;
     }
 
-    private Map<String, Object> setReiProperties(){
+    private Map<String, Object> setReiProperties() {
         Map<String, Object> reiProperties = new HashMap<String, Object>();
         Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
         String[] reiTagList = {
@@ -476,7 +486,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return reiProperties;
     }
 
-    private Map<String, Object> setCreators(DocumentPool documentPool){
+    private Map<String, Object> setCreators(DocumentPool documentPool) {
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> creatorsList = new ArrayList<String>();
         // add irix system user for imports as default
@@ -552,7 +562,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
             String aid = fet.get(i).getFileName();
-            try{
+            try {
                 String afnurl = URLEncoder.encode(fet.get(i).getFileName(), "UTF-8");
                 String afn = fet.get(i).getFileName()
                         .replaceAll("[^\\x00-\\x7F]", "")
@@ -564,14 +574,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 String mimeType = fet.get(i).getMimeType();
                 if (MT_IMAGES.contains(mimeType)) {
                     d.uploadImage(afn, t, t, fet.get(i).getEnclosedObject(), aid, mimeType);
-                }
-                // TODO separate handling of movie files
-                else if (MT_MOVIES.contains(mimeType)) {
+                } else if (MT_MOVIES.contains(mimeType)) { // TODO separate handling of movie files
                     d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid, mimeType);
                 } else {
                     d.uploadFile(afn, t, t, fet.get(i).getEnclosedObject(), aid, mimeType);
                 }
-            } catch (UnsupportedEncodingException uee){
+            } catch (UnsupportedEncodingException uee) {
                 throw new IrixBrokerException("Could not Upload Attachement: ", uee);
             }
         }
@@ -585,8 +593,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     public void addEventsfromDokpool(DocumentPool dp) {
         List<Event> events = dp.getEvents();
         String[] ev = new String[events.size()];
-        for (int i = 0; i < events.size(); i++)
+        for (int i = 0; i < events.size(); i++) {
             ev[i] = events.get(i).getId();
+        }
         setEvents(ev);
     }
 
@@ -746,7 +755,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         }
     }
 
-    public static Map<String,Object> extractChildElementsAsMap(Element parent) {
+    public static Map<String, Object> extractChildElementsAsMap(Element parent) {
         Map<String, Object> childrenMap = new HashMap<String, Object>();
         NodeList childNodes = parent.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {

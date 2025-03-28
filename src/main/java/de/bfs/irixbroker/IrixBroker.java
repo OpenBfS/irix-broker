@@ -1,5 +1,8 @@
-/**
+/* Copyright (C) 2015-2025 by Bundesamt fuer Strahlenschutz
  *
+ * This file is Free Software under the GNU GPL (v>=3)
+ * and comes with ABSOLUTELY NO WARRANTY!
+ * See LICENSE for details.
  */
 package de.bfs.irixbroker;
 
@@ -24,7 +27,8 @@ import jakarta.xml.ws.WebServiceContext;
 
 public class IrixBroker {
 
-    private static System.Logger log = System.getLogger(IrixBroker.class.getName());
+    private static System.Logger log =
+        System.getLogger(IrixBroker.class.getName());
 
     @Resource
     private WebServiceContext context;
@@ -49,8 +53,8 @@ public class IrixBroker {
     }
 
     /**
-     * Get servlet context and initialize logging backend (e.g. log4j) and other parameters from
-     * configuration in web.xml.
+     * Get servlet context and initialize logging backend (e.g. log4j) and
+     * other parameters from configuration in web.xml.
      *
      * @throws IrixBrokerException if the servlet context cannot be obtained.
      */
@@ -63,7 +67,8 @@ public class IrixBroker {
      * {@inheritDoc}
      */
     //@Override
-    public void deliverIrixBroker(ReportType report) throws IrixBrokerException {
+    public void deliverIrixBroker(ReportType report) throws
+            IrixBrokerException {
         if (!initialized) {
             // Necessary because the servlet context is not accessible in ctor
             init();
@@ -71,16 +76,16 @@ public class IrixBroker {
             testRecipientConnection();
         }
 
-        if (report == null)
+        if (report == null) {
             System.exit(-1);
-        else {
+        } else {
             IdentificationType ident = report.getIdentification();
             ReportingBasesType base = ident.getReportingBases();
             List<String> bases;
             bases = base.getReportingBasis();
 
             if (bases.isEmpty()) {
-                throw new IrixBrokerException( "No reporting bases found.", new Throwable("No reporting bases found."));
+                throw new IrixBrokerException("No reporting bases found.", new Throwable("No reporting bases found."));
             }
             for (int i = 0; i < bases.size(); i++) {
                 String b = bases.get(i);

@@ -1,10 +1,11 @@
-/* Copyright (C) 2015 by Bundesamt fuer Strahlenschutz
- * Software engineering by Intevation GmbH
- * @authors bp-fr, lem-fr - German Federal Office for Radiation Protection www.bfs.de
+/* Copyright (C) 2015-2025 by Bundesamt fuer Strahlenschutz
  *
  * This file is Free Software under the GNU GPL (v>=3)
  * and comes with ABSOLUTELY NO WARRANTY!
- * See LICENSE.txt for details.
+ * See LICENSE for details.
+ */
+/**
+ * @authors bp-fr, lem-fr - German Federal Office for Radiation Protection www.bfs.de
  */
 
 package de.bfs.irixbroker;
