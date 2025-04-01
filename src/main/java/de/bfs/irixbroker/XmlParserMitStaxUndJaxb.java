@@ -87,8 +87,7 @@ public class XmlParserMitStaxUndJaxb {
      * @param  elemVerarb  Callback-Objekt fuer die Verarbeitung der einzelnen Elemente
      * @return Anzahl der gefundenen Elemente
      */
-    public static long parseXmlElemente(Reader xml, String packageName, ElementeVerarbeitung elemVerarb) throws XMLStreamException, JAXBException
-    {
+    public static long parseXmlElemente(Reader xml, String packageName, ElementeVerarbeitung elemVerarb) throws XMLStreamException, JAXBException {
         // StAX:
         EventFilter startElementFilter = new EventFilter() {
             @Override public boolean accept(XMLEvent event) {
@@ -124,8 +123,7 @@ public class XmlParserMitStaxUndJaxb {
      * @param  elemVerarb    Callback-Objekt fuer die Verarbeitung der einzelnen Elemente
      * @return Anzahl der gefundenen Elemente
      */
-    public static long parseXmlElemente(Reader xml, Class<?> elementClass, ElementeVerarbeitung elemVerarb) throws XMLStreamException, JAXBException
-    {
+    public static long parseXmlElemente(Reader xml, Class<?> elementClass, ElementeVerarbeitung elemVerarb) throws XMLStreamException, JAXBException {
         // StAX:
         EventFilter startElementFilter = new EventFilter() {
             @Override public boolean accept(XMLEvent event) {
@@ -160,8 +158,7 @@ public class XmlParserMitStaxUndJaxb {
      * @param xsdSchema XSD-Schema
      * @param xml         XML-Reader
      */
-    public static void validate(String xsdSchema, Reader xml) throws SAXException, IOException
-    {
+    public static void validate(String xsdSchema, Reader xml) throws SAXException, IOException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema          schema = schemaFactory.newSchema(new File(xsdSchema));
         Validator      validator = schema.newValidator();

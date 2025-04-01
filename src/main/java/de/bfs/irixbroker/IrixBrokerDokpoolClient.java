@@ -442,12 +442,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 TAG_AUTHORITY,
                 TAG_PDFVERSION
         };
-        String [] reiListTagList = {
+        String[] reiListTagList = {
                 TAG_NUCLEARINSTALLATION,
                 TAG_REILEGALBASE,
                 TAG_ORIGIN
         };
-        String [] reiSpecTagList = {
+        String[] reiSpecTagList = {
                 TAG_MST
         };
         for (String tag: reiSpecTagList) {

@@ -48,8 +48,8 @@ public class JaxbMarshalUnmarshalUtil {
             throws JAXBException, SAXException {
         // Schema und JAXBContext sind multithreadingsicher ("thread safe"):
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema        schema        = (xsdSchema == null || xsdSchema.trim().length() == 0)
-                                        ? null : schemaFactory.newSchema(new File(xsdSchema));
+        Schema        schema        = (xsdSchema == null || xsdSchema.trim().length() == 0) ?
+                                    null : schemaFactory.newSchema(new File(xsdSchema));
         JAXBContext   jaxbContext   = JAXBContext.newInstance(clss.getPackage().getName());
         //   System.out.println(jaxbContext.toString());
         return unmarshal(jaxbContext, schema, xmlDatei, clss, validate);
@@ -85,8 +85,8 @@ public class JaxbMarshalUnmarshalUtil {
     public static void marshal(String xsdSchema, String xmlDatei, Object jaxbElement)
     throws JAXBException, SAXException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema        schema        = (xsdSchema == null || xsdSchema.trim().length() == 0)
-                                        ? null : schemaFactory.newSchema(new File(xsdSchema));
+        Schema        schema        = (xsdSchema == null || xsdSchema.trim().length() == 0) ?
+                                    null : schemaFactory.newSchema(new File(xsdSchema));
         JAXBContext   jaxbContext   = JAXBContext.newInstance(jaxbElement.getClass().getPackage().getName());
         marshal(jaxbContext, schema, xmlDatei, jaxbElement);
     }

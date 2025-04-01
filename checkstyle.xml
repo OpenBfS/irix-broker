@@ -11,8 +11,8 @@ Maven Checkstyle plugin. Some design related checks where removed.
 
 
 <module name="Checker">
-<property name='localeCountry' value='' />
-<property name='localeLanguage' value='' />
+<property name='localeCountry' value=''/>
+<property name='localeLanguage' value=''/>
 <!--
     If you set the basedir property below, then all reported file
     names will be relative to the specified directory. See
@@ -40,7 +40,7 @@ Maven Checkstyle plugin. Some design related checks where removed.
 <!-- Following interprets the header file as regular expressions. -->
 <module name="Header">
   <property name="headerFile" value="java.header"/>
-  <property name="severity" value="warning" />
+  <property name="severity" value="warning"/>
 </module>
 
 <module name="FileTabCharacter">
@@ -64,10 +64,10 @@ Maven Checkstyle plugin. Some design related checks where removed.
   <!-- Checks for Javadoc comments.                     -->
   <!-- See http://checkstyle.sf.net/config_javadoc.html -->
   <module name="JavadocType">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="JavadocMethod">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
     <property name="scope" value="protected"/>
     <property name="validateThrows" value="true"/>
     <property name="allowMissingPropertyJavadoc" value="true"/>
@@ -75,35 +75,35 @@ Maven Checkstyle plugin. Some design related checks where removed.
   </module>
   <module name="JavadocVariable">
     <property name="scope" value="protected"/>
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="JavadocStyle">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
 
 
   <!-- Checks for Naming Conventions.                  -->
   <!-- See http://checkstyle.sf.net/config_naming.html -->
   <module name="ConstantName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="LocalFinalVariableName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="LocalVariableName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="MemberName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="MethodName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="PackageName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="ParameterName">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="StaticVariableName"/>
   <module name="TypeName"/>
@@ -130,17 +130,19 @@ Maven Checkstyle plugin. Some design related checks where removed.
   <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
   <module name="RedundantImport"/>
   <module name="UnusedImports">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
 
 
   <!-- Checks for Size Violations.                    -->
   <!-- See http://checkstyle.sf.net/config_sizes.html -->
   <module name="LineLength">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="MethodLength"/>
-  <module name="ParameterNumber"/>
+  <module name="ParameterNumber">
+    <property name="severity" value="warning"/>
+  </module>
 
 
   <!-- Checks for whitespace                               -->
@@ -148,12 +150,33 @@ Maven Checkstyle plugin. Some design related checks where removed.
   <module name="EmptyForIteratorPad"/>
   <module name="MethodParamPad"/>
   <module name="NoWhitespaceAfter"/>
-  <module name="NoWhitespaceBefore"/>
-  <module name="OperatorWrap"/>
+  <module name="NoWhitespaceBefore">
+    <property name="allowLineBreaks" value="true"/>
+  </module>
+  <module name="OperatorWrap">
+    <property name="option" value="eol"/>
+  </module>
   <module name="ParenPad"/>
   <module name="TypecastParenPad"/>
-  <module name="WhitespaceAfter"/>
-  <module name="WhitespaceAround"/>
+  <module name="WhitespaceAfter">
+    <property name="tokens"
+                value="SEMI, TYPECAST"/>
+  </module>
+  <module name="WhitespaceAfter">
+    <property name="severity" value="warning"/>
+    <property name="tokens" value="COMMA"/>
+  </module>
+
+  <module name="WhitespaceAround">
+    <property name="allowEmptyMethods" value="true"/>
+    <property name="tokens"
+                value="ASSIGN, DIV_ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, STAR_ASSIGN,
+                       MOD_ASSIGN, SR_ASSIGN, BSR_ASSIGN, SL_ASSIGN, BXOR_ASSIGN,
+                       BOR_ASSIGN, BAND_ASSIGN, LITERAL_CATCH, LITERAL_DO,
+                       LITERAL_ELSE, LITERAL_FINALLY, LITERAL_FOR,
+                       LITERAL_IF, LITERAL_RETURN, LITERAL_SWITCH,
+                       LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE"/>
+  </module>
 
 
   <!-- Modifier Checks                                    -->
@@ -166,27 +189,29 @@ Maven Checkstyle plugin. Some design related checks where removed.
   <!-- See http://checkstyle.sf.net/config_blocks.html -->
   <module name="AvoidNestedBlocks"/>
   <module name="EmptyBlock">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="LeftCurly"/>
   <module name="NeedBraces"/>
-  <module name="RightCurly"/>
+  <module name="RightCurly">
+    <property name="option" value="same"/>
+  </module>
 
 
   <!-- Checks for common coding problems               -->
   <!-- See http://checkstyle.sf.net/config_coding.html -->
   <module name="AvoidInlineConditionals">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="EmptyStatement"/>
   <module name="EqualsHashCode"/>
   <module name="HiddenField">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="IllegalInstantiation"/>
   <module name="InnerAssignment"/>
   <module name="MagicNumber">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="MissingSwitchDefault"/>
   <module name="SimplifyBooleanExpression"/>
@@ -196,7 +221,7 @@ Maven Checkstyle plugin. Some design related checks where removed.
   <!-- See http://checkstyle.sf.net/config_design.html -->
   <module name="HideUtilityClassConstructor"/>
   <module name="InterfaceIsType">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
 
 
@@ -204,7 +229,7 @@ Maven Checkstyle plugin. Some design related checks where removed.
   <!-- See http://checkstyle.sf.net/config_misc.html -->
   <module name="ArrayTypeStyle"/>
   <module name="TodoComment">
-    <property name="severity" value="warning" />
+    <property name="severity" value="warning"/>
   </module>
   <module name="UpperEll"/>
 
