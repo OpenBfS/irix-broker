@@ -74,12 +74,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         bfsIrixBrokerProperties = bfsIBP;
     }
 
-    public boolean sendToDokpool(ReportType report) throws  IrixBrokerException {
+    public boolean sendToDokpool(ReportType report) throws IrixBrokerException {
         success = false;
         success = readIdentification(report.getIdentification());
         success = readAnnexes(report.getAnnexes());
         try {
-            success = DokpoolClient();
+            success = prepareDocAndsendToDokpool();
         } catch (Exception e) {
             throw new IrixBrokerException("DokpoolClient() not working as expected: ", e);
         }
@@ -146,25 +146,32 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return true;
     }
 
+    /**
+     * Gets the document pool corresponding to the ID specified
+     * within the IRIX document. If no such pool exists, a pool
+     * with ID specified IrixBrokerProperties is returned. If this
+     * also does not exist, use the REST users default pool.
+     */
     private DocumentPool getMyDocPool(DokpoolBaseService DokpoolBaseService, List<DocumentPool> myDocPools, Element dt) {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
         DocumentPool myDocPool = DokpoolBaseService.getPrimaryDocumentPool();
-        Element myDocPoolName = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
-        Boolean renewDocPool = true;
-        if (renewDocPool && (myDocPoolName != null)) {
+        Element myDocPoolNameElement = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
+        String myDocPoolName = (myDocPoolNameElement != null) ? myDocPoolNameElement.getTextContent() : null;
+        boolean specificDocPoolFound = false;
+        if (myDocPoolName != null) {
             for (DocumentPool sDocPool : myDocPools) {
-                if (sDocPool.getFolderPath().matches("/" + ploneSite + "/" + myDocPoolName.getTextContent())) {
+                if (sDocPool.getId().equals(myDocPoolName)) {
                     myDocPool = sDocPool;
-                    renewDocPool = false;
+                    specificDocPoolFound = true;
                 }
             }
         }
-        if (renewDocPool) {
+        if (!specificDocPoolFound) {
             for (DocumentPool sDocPool : myDocPools) {
-                if (sDocPool.getFolderPath().matches("/" + ploneSite + "/" + ploneDokpool)) {
+                if (sDocPool.getId().equals(ploneDokpool)) {
                     myDocPool = sDocPool;
                 }
             }
@@ -221,21 +228,24 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return myGroupFolder;
     }
 
-    private List <String> getBehaviors(DocumentPool docPool) {
+    private List <String> getPoolBehaviors(DocumentPool docPool) {
         List<String> behaviorList = new ArrayList();
         // TODO get this working
         return behaviorList;
     }
 
-
-    private Map<String, Object> setBehaviors(DocumentPool documentPool) {
+    /**
+     * Turns all active behaviors in the IRIX document's DokpoolMeta
+     * into a list of behaviors. "<IsBehavior>true</IsBehavior>" becomes the
+     * list element "behavior".
+     * @return Map where the only entry is the list of behaviors with key "local_behaviors".
+     */
+    private Map<String, Object> behaviors(DocumentPool documentPool) {
         //TODO check if Dokpool supports behaviours before adding them
-        List <String> docPoolBehaviors = getBehaviors(documentPool);
+        List <String> docPoolBehaviors = getPoolBehaviors(documentPool);
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> behaviorsList = new ArrayList<String>();
-        //String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
         String[] behaviorsTagList = {TAG_ISELAN, TAG_ISRODOS, TAG_ISREI, TAG_ISDOKSYS};
-        //FIXME allow doksys as well - breaks Dokpool at the moment!
         for (String behaviorTag : behaviorsTagList) {
             Element element = extractSingleElement(dokpoolmeta, behaviorTag);
             if (element != null && element.getTextContent().equalsIgnoreCase("true")) {
@@ -251,14 +261,17 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return properties;
     }
 
-
-    private Map<String, Object> setSubjects() {
+    /**
+     * Extract all subjects from the IRIX document and turn them into a list.
+     * @return Map where the list is the only entry with key "subjects".
+     */
+    private Map<String, Object> subjects() {
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> propertiesList = new ArrayList<String>();
-        getDoksysSubjects(propertiesList);
-        getElanSubjects(propertiesList);
-        getRodosSubjects(propertiesList);
-        getReiSubjects(propertiesList);
+        appendDoksysSubjects(propertiesList);
+        appendElanSubjects(propertiesList);
+        appendRodosSubjects(propertiesList);
+        appendReiSubjects(propertiesList);
 
         Element mySubjects = extractSingleElement(dokpoolmeta, TAG_SUBJECTS);
         //Map<String, Object> dokpoolSubjects = new HashMap<String, Object>();
@@ -283,35 +296,39 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return properties;
     }
 
-    private void getDoksysSubjects(List<String> propertiesList) {
+    private void appendDoksysSubjects(List<String> propertiesList) {
 
         Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
         //Element foo = extractSingleElement(doksysmeta, TAG_FOO);
         //propertiesList.add("no DOKSYS subjects");
     }
 
-    private void getElanSubjects(List<String> propertiesList) {
+    private void appendElanSubjects(List<String> propertiesList) {
 
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         //Element foo = extractSingleElement(elanmeta, TAG_FOO);
         //propertiesList.add("no ELAN subjects");
     }
 
-    private void getRodosSubjects(List<String> propertiesList) {
+    private void appendRodosSubjects(List<String> propertiesList) {
 
         Element rodosmeta = extractSingleElement(dokpoolmeta, TAG_RODOS);
         //Element foo = extractSingleElement(rodosmeta, TAG_FOO);
         //propertiesList.add("no RODOS subjects");
     }
 
-    private void getReiSubjects(List<String> propertiesList) {
+    private void appendReiSubjects(List<String> propertiesList) {
 
         Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
         //Element foo = extractSingleElement(reimeta, TAG_FOO);
         //propertiesList.add("no REI subjects");
     }
 
-    private Map<String, Object> setDoksysProperties() {
+    /**
+     * Extracts the Doksys properties from the DokpoolMeta element.
+     * @return doksys properties as a Map.
+     */
+    private Map<String, Object> doksysProperties() {
         Map<String, Object> doksysProperties = new HashMap<String, Object>();
         Element doksysmeta = extractSingleElement(dokpoolmeta, TAG_DOKSYS);
         String[] doksysSingleTagList = {
@@ -387,7 +404,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return doksysProperties;
     }
 
-    private Map<String, Object> setElanProperties(DocumentPool myDocPool) {
+    /**
+     * Extracts the ELAN properties from the DokpoolMeta element.
+     * @return ELAN properties as a Map.
+     */
+    private Map<String, Object> elanProperties(DocumentPool myDocPool) {
         /** point the new Dokument to active or referenced scenarios of the dokpool
          * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
          * and are active. If no scenarios are referenced in the request add all active
@@ -420,7 +441,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return elanProperties;
     }
 
-    private Map<String, Object> setRodosProperties() {
+    /**
+     * Extracts the RODOS properties from the DokpoolMeta element.
+     * @return RODOS properties as a Map.
+     */
+    private Map<String, Object> rodosProperties() {
         Map<String, Object> rodosProperties;
         Element rodosmeta = extractSingleElement(dokpoolmeta, TAG_RODOS);
         if (rodosmeta != null) {
@@ -431,7 +456,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return rodosProperties;
     }
 
-    private Map<String, Object> setReiProperties() {
+    /**
+     * Extracts the REI properties from the DokpoolMeta element.
+     * @return REI properties as a Map.
+     */
+    private Map<String, Object> reiProperties() {
         Map<String, Object> reiProperties = new HashMap<String, Object>();
         Element reimeta = extractSingleElement(dokpoolmeta, TAG_REI);
         String[] reiTagList = {
@@ -486,7 +515,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return reiProperties;
     }
 
-    private Map<String, Object> setCreators(DocumentPool documentPool) {
+    /**
+     * Creators as specified by IrixBokerProperties and
+     * and contained in DcoumentOwner Element of the IRIX document.
+     * @return Map with "creators" list as only entry.
+     */
+    private Map<String, Object> creators(DocumentPool documentPool) {
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> creatorsList = new ArrayList<String>();
         // add irix system user for imports as default
@@ -499,8 +533,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return properties;
     }
 
-
-    private boolean DokpoolClient() throws IrixBrokerException {
+    /**
+     * Prepares a Dokpool document from the IRIX document and
+     * sends it to the Dokpool instance specified by
+     * IrixBrokerProperties.
+     * @return true iff sending succeeded.
+     */
+    private boolean prepareDocAndsendToDokpool() throws IrixBrokerException {
         success = true;
         String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
         String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
@@ -528,36 +567,36 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docProperties.put("text", main_text);
         //WIP FIXME - here the problem seems to start or show up
         docProperties.put("docType", dt.getTextContent());
-        docProperties.putAll(setBehaviors(myDocPool));
-        docProperties.putAll(setSubjects());
+        docProperties.putAll(behaviors(myDocPool));
+        docProperties.putAll(subjects());
         log.log(INFO, "Creating new Dokument in " + myGroupFolder.getFolderPath());
         Document d = myGroupFolder.createDPDocument(ReportId, docProperties);
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys != null && doksys.getTextContent().equalsIgnoreCase("true")) {
-            d.update(setDoksysProperties());
+            d.update(doksysProperties());
         }
         // updating document with elan specific properties
         Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
         if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
-            d.update(setElanProperties(myDocPool));
+            d.update(elanProperties(myDocPool));
         }
         // updating document with rodos specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
         if (rodos != null && rodos.getTextContent().equalsIgnoreCase("true")) {
-            d.update(setRodosProperties());
+            d.update(rodosProperties());
         }
         // updating document with rei specific properties
         Element rei = extractSingleElement(dokpoolmeta, TAG_ISREI);
         if (rei != null && rei.getTextContent().equalsIgnoreCase("true")) {
-            d.update(setReiProperties());
+            d.update(reiProperties());
         }
         //DokpoolOwner to be used to change ownership of an created document
         Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
         /*if (dokpoolDocumentOwner != null && !dokpoolDocumentOwner.getTextContent().equals("")) {
-            d.update(setCreators(myDocPool));
+            d.update(creators(myDocPool));
         }*/
-        d.update(setCreators(myDocPool));
+        d.update(creators(myDocPool));
         // add attachements
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
