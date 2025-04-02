@@ -176,12 +176,4 @@ public class IrixBrokerEUClient implements IrixBrokerDokpoolXMLNames {
         return (Element) childElements.item(0);
     }
 
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-    }
-
 }

@@ -60,14 +60,4 @@ public class IRIXElanConfig {
         return cat.get(irixCat);
     }
 
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-        IRIXElanConfig IEC = new IRIXElanConfig();
-
-    }
-
 }
