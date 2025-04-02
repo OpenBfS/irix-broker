@@ -93,7 +93,7 @@ public class IrixBroker {
                 //documents for Dokpool
                 if (b.equals("ESD")) {
                     IrixBrokerDokpoolClient iec = new IrixBrokerDokpoolClient(bfsIBP);
-                    iec.sendToDocpool(report);
+                    iec.sendToDokpool(report);
                     log.log(DEBUG, iec.getReportContext());
                     log.log(DEBUG, "iec created");
                 }

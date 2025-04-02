@@ -40,7 +40,7 @@ import org.iaea._2012.irix.format.identification.IdentificationType;
 import de.bfs.dokpool.client.content.Document;
 import de.bfs.dokpool.client.content.DocumentPool;
 import de.bfs.dokpool.client.content.Event;
-import de.bfs.dokpool.client.base.DocpoolBaseService;
+import de.bfs.dokpool.client.base.DokpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
 import org.w3c.dom.Element;
@@ -74,14 +74,14 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         bfsIrixBrokerProperties = bfsIBP;
     }
 
-    public boolean sendToDocpool(ReportType report) throws  IrixBrokerException {
+    public boolean sendToDokpool(ReportType report) throws  IrixBrokerException {
         success = false;
         success = readIdentification(report.getIdentification());
         success = readAnnexes(report.getAnnexes());
         try {
-            success = DocPoolClient();
+            success = DokpoolClient();
         } catch (Exception e) {
-            throw new IrixBrokerException("DocPoolClient() not working as expected: ", e);
+            throw new IrixBrokerException("DokpoolClient() not working as expected: ", e);
         }
         return success;
     }
@@ -146,63 +146,63 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return true;
     }
 
-    private DocumentPool getMyDocpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools, Element dt) {
+    private DocumentPool getMyDocPool(DokpoolBaseService DokpoolBaseService, List<DocumentPool> myDocPools, Element dt) {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
-        DocumentPool myDocpool = docpoolBaseService.getPrimaryDocumentPool();
-        Element myDocpoolName = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
-        Boolean renewDocpool = true;
-        if (renewDocpool && (myDocpoolName != null)) {
-            for (DocumentPool sDocpool : myDocpools) {
-                if (sDocpool.getFolderPath().matches("/" + ploneSite + "/" + myDocpoolName.getTextContent())) {
-                    myDocpool = sDocpool;
-                    renewDocpool = false;
+        DocumentPool myDocPool = DokpoolBaseService.getPrimaryDocumentPool();
+        Element myDocPoolName = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
+        Boolean renewDocPool = true;
+        if (renewDocPool && (myDocPoolName != null)) {
+            for (DocumentPool sDocPool : myDocPools) {
+                if (sDocPool.getFolderPath().matches("/" + ploneSite + "/" + myDocPoolName.getTextContent())) {
+                    myDocPool = sDocPool;
+                    renewDocPool = false;
                 }
             }
         }
-        if (renewDocpool) {
-            for (DocumentPool sDocpool : myDocpools) {
-                if (sDocpool.getFolderPath().matches("/" + ploneSite + "/" + ploneDokpool)) {
-                    myDocpool = sDocpool;
+        if (renewDocPool) {
+            for (DocumentPool sDocPool : myDocPools) {
+                if (sDocPool.getFolderPath().matches("/" + ploneSite + "/" + ploneDokpool)) {
+                    myDocPool = sDocPool;
                 }
             }
         }
 
-        return myDocpool;
+        return myDocPool;
     }
 
-/*    private DocumentPool getMyDocpool(DocpoolBaseService docpoolBaseService, List<DocumentPool> myDocpools) {
+/*    private DocumentPool getMyDocPool(DokpoolBaseService DokpoolBaseService, List<DocumentPool> myDocPools) {
         Element dt = new Element;
-        return getMyDocpool(docpoolBaseService, myDocpools, dt);
+        return getMyDocPool(DokpoolBaseService, myDocPools, dt);
     }*/
 
-    private Folder getMyGroupFolder(DocpoolBaseService docpoolBaseService, DocumentPool myDocpool) {
+    private Folder getMyGroupFolder(DokpoolBaseService DokpoolBaseService, DocumentPool myDocPool) {
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
         String ploneGroupFolder = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
 
         Boolean renewGroupFolder = true;
-        Element myDocpoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
-        List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
+        Element myDocPoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
+        List<DocumentPool> myDocPools = DokpoolBaseService.getDocumentPools();
         Folder myGroupFolder = null;
-        if (myDocpoolGroupFolder  == null) {
+        if (myDocPoolGroupFolder  == null) {
             log.log(WARNING, "Could not find Groupfolder in dokpoolmeta. Trying systemdefined Groupfolder.");
         } else {
             try {
-                //myGroupFolder = myDocpool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocpoolGroupFolder.getTextContent());
-                myGroupFolder = myDocpool.getFolder("content/Groups/" + myDocpoolGroupFolder.getTextContent());
+                //myGroupFolder = myDocPool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocPoolGroupFolder.getTextContent());
+                myGroupFolder = myDocPool.getFolder("content/Groups/" + myDocPoolGroupFolder.getTextContent());
                 renewGroupFolder = false;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here
                 // TODO give warning falling back to system configuration for import
-                log.log(WARNING, "Could not find Groupfolder: " + myDocpoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
+                log.log(WARNING, "Could not find Groupfolder: " + myDocPoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
             }
         }
         if (renewGroupFolder) {
             try {
-                myGroupFolder = myDocpool.getFolder("content/Groups/" + ploneGroupFolder);
+                myGroupFolder = myDocPool.getFolder("content/Groups/" + ploneGroupFolder);
                 renewGroupFolder = false;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here but suspicious
@@ -210,9 +210,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 log.log(WARNING, "Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groupfolder.");
             }
         }
-        if (renewGroupFolder && (myDocpools.size() > 0)) {
+        if (renewGroupFolder && (myDocPools.size() > 0)) {
             try {
-                myGroupFolder = myDocpool.getGroupFolders().get(0);
+                myGroupFolder = myDocPool.getGroupFolders().get(0);
             } catch (NullPointerException e) {
                 throw new NullPointerException("Could not find a valid GroupFolder");
             }
@@ -221,7 +221,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return myGroupFolder;
     }
 
-    private List <String> getBehaviors(DocumentPool docpool) {
+    private List <String> getBehaviors(DocumentPool docPool) {
         List<String> behaviorList = new ArrayList();
         // TODO get this working
         return behaviorList;
@@ -230,7 +230,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     private Map<String, Object> setBehaviors(DocumentPool documentPool) {
         //TODO check if Dokpool supports behaviours before adding them
-        List <String> docpoolBehaviors = getBehaviors(documentPool);
+        List <String> docPoolBehaviors = getBehaviors(documentPool);
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> behaviorsList = new ArrayList<String>();
         //String[] behaviorsTagList = {TAG_ISDOKSYS, TAG_ISELAN, TAG_ISRODOS, TAG_ISREI};
@@ -387,7 +387,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return doksysProperties;
     }
 
-    private Map<String, Object> setElanProperties(DocumentPool myDocpool) {
+    private Map<String, Object> setElanProperties(DocumentPool myDocPool) {
         /** point the new Dokument to active or referenced scenarios of the dokpool
          * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
          * and are active. If no scenarios are referenced in the request add all active
@@ -403,16 +403,16 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 for (int i = 0; i < myElanEventList.getLength(); i++) {
                     evlist.add(myElanEventList.item(i).getTextContent());
                 }
-                addEventsfromDokpool(myDocpool, evlist);
+                addEventsfromDokpool(myDocPool, evlist);
             } else if (myElanEvents != null) {
                 NodeList myElanEventsList = myElanEvents.getChildNodes();
                 List<String> evlist = new ArrayList<String>();
                 for (int i = 0; i < myElanEventsList.getLength(); i++) {
                     evlist.add(myElanEventsList.item(i).getTextContent());
                 }
-                addEventsfromDokpool(myDocpool, evlist);
+                addEventsfromDokpool(myDocPool, evlist);
             } else {
-                addActiveEventsfromDokpool(myDocpool);
+                addActiveEventsfromDokpool(myDocPool);
             }
         }
         elanProperties.put("scenarios", events);
@@ -500,7 +500,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }
 
 
-    private boolean DocPoolClient() throws IrixBrokerException {
+    private boolean DokpoolClient() throws IrixBrokerException {
         success = true;
         String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
         String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
@@ -514,24 +514,24 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
 
         //connect to Dokpool using API (wsapi4plone/wsapi4elan)
-        DocpoolBaseService docpoolBaseService = new DocpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
+        DokpoolBaseService DokpoolBaseService = new DokpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
         // DocumentPool
-        List<DocumentPool> myDocpools = docpoolBaseService.getDocumentPools();
-        DocumentPool myDocpool = getMyDocpool(docpoolBaseService, myDocpools, dt);
+        List<DocumentPool> myDocPools = DokpoolBaseService.getDocumentPools();
+        DocumentPool myDocPool = getMyDocPool(DokpoolBaseService, myDocPools, dt);
         //GroupFolder
-        List<Folder> groupFolders = myDocpool.getGroupFolders();
-        Folder myGroupFolder = getMyGroupFolder(docpoolBaseService, myDocpool);
+        List<Folder> groupFolders = myDocPool.getGroupFolders();
+        Folder myGroupFolder = getMyGroupFolder(DokpoolBaseService, myDocPool);
         // hashmap to store the generic dokpool meta data
-        Map<String, Object> docpoolProperties = new HashMap<String, Object>();
-        docpoolProperties.put("title", title);
-        docpoolProperties.put("description", desc);
-        docpoolProperties.put("text", main_text);
+        Map<String, Object> docProperties = new HashMap<String, Object>();
+        docProperties.put("title", title);
+        docProperties.put("description", desc);
+        docProperties.put("text", main_text);
         //WIP FIXME - here the problem seems to start or show up
-        docpoolProperties.put("docType", dt.getTextContent());
-        docpoolProperties.putAll(setBehaviors(myDocpool));
-        docpoolProperties.putAll(setSubjects());
+        docProperties.put("docType", dt.getTextContent());
+        docProperties.putAll(setBehaviors(myDocPool));
+        docProperties.putAll(setSubjects());
         log.log(INFO, "Creating new Dokument in " + myGroupFolder.getFolderPath());
-        Document d = myGroupFolder.createDPDocument(ReportId, docpoolProperties);
+        Document d = myGroupFolder.createDPDocument(ReportId, docProperties);
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys != null && doksys.getTextContent().equalsIgnoreCase("true")) {
@@ -540,7 +540,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         // updating document with elan specific properties
         Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
         if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
-            d.update(setElanProperties(myDocpool));
+            d.update(setElanProperties(myDocPool));
         }
         // updating document with rodos specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
@@ -555,9 +555,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         //DokpoolOwner to be used to change ownership of an created document
         Element dokpoolDocumentOwner = extractSingleElement(dokpoolmeta, TAG_DOKPOOLDOCUMENTOWNER);
         /*if (dokpoolDocumentOwner != null && !dokpoolDocumentOwner.getTextContent().equals("")) {
-            d.update(setCreators(myDocpool));
+            d.update(setCreators(myDocPool));
         }*/
-        d.update(setCreators(myDocpool));
+        d.update(setCreators(myDocPool));
         // add attachements
         for (int i = 0; i < fet.size(); i++) {
             String t = fet.get(i).getTitle();
