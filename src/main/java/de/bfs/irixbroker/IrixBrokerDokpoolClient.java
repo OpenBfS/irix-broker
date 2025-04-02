@@ -190,34 +190,34 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
         String ploneGroupFolder = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
 
-        Boolean renewGroupFolder = true;
         Element myDocPoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
         List<DocumentPool> myDocPools = DokpoolBaseService.getDocumentPools();
         Folder myGroupFolder = null;
+        boolean folderFound = false;
         if (myDocPoolGroupFolder  == null) {
             log.log(WARNING, "Could not find Groupfolder in dokpoolmeta. Trying systemdefined Groupfolder.");
         } else {
             try {
                 //myGroupFolder = myDocPool.getFolder(ploneSite + "/" + ploneDokpool + "/content/Groups/" + myDocPoolGroupFolder.getTextContent());
                 myGroupFolder = myDocPool.getFolder("content/Groups/" + myDocPoolGroupFolder.getTextContent());
-                renewGroupFolder = false;
+                folderFound = true;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here
                 // TODO give warning falling back to system configuration for import
                 log.log(WARNING, "Could not find Groupfolder: " + myDocPoolGroupFolder.getTextContent() + ". Trying systemdefined Groupfolder.");
             }
         }
-        if (renewGroupFolder) {
+        if (!folderFound) {
             try {
                 myGroupFolder = myDocPool.getFolder("content/Groups/" + ploneGroupFolder);
-                renewGroupFolder = false;
+                folderFound = true;
             } catch (NullPointerException e) {
                 // It's fine not to find a groufolder here but suspicious
                 // TODO give warning falling back to first available groupfolder for import
                 log.log(WARNING, "Could not find systemdefined Groupfolder: " + ploneGroupFolder + ". Trying first available Groupfolder.");
             }
         }
-        if (renewGroupFolder && (myDocPools.size() > 0)) {
+        if (!folderFound && (myDocPools.size() > 0)) {
             try {
                 myGroupFolder = myDocPool.getGroupFolders().get(0);
             } catch (NullPointerException e) {
@@ -228,21 +228,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return myGroupFolder;
     }
 
-    private List <String> getPoolBehaviors(DocumentPool docPool) {
-        List<String> behaviorList = new ArrayList();
-        // TODO get this working
-        return behaviorList;
-    }
-
     /**
      * Turns all active behaviors in the IRIX document's DokpoolMeta
      * into a list of behaviors. "<IsBehavior>true</IsBehavior>" becomes the
-     * list element "behavior".
+     * list element "behavior". Behaviors are only added if the app is
+     * supported by the current document pool.
      * @return Map where the only entry is the list of behaviors with key "local_behaviors".
      */
     private Map<String, Object> behaviors(DocumentPool documentPool) {
-        //TODO check if Dokpool supports behaviours before adding them
-        List <String> docPoolBehaviors = getPoolBehaviors(documentPool);
+        List<String> docPoolBehaviors = documentPool.getSupportedApps();
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> behaviorsList = new ArrayList<String>();
         String[] behaviorsTagList = {TAG_ISELAN, TAG_ISRODOS, TAG_ISREI, TAG_ISDOKSYS};
@@ -250,10 +244,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             Element element = extractSingleElement(dokpoolmeta, behaviorTag);
             if (element != null && element.getTextContent().equalsIgnoreCase("true")) {
                 String behavior = element.getTagName().replaceFirst("^Is", "").toLowerCase();
-                behaviorsList.add(behavior);
+                if (docPoolBehaviors.contains(behavior)) {
+                    behaviorsList.add(behavior);
+                }
             }
         }
-
 
         if (behaviorsList.size() > 0) {
             properties.put("local_behaviors", behaviorsList);
