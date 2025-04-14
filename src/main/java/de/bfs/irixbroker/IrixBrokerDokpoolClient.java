@@ -79,7 +79,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         success = readIdentification(report.getIdentification());
         success = readAnnexes(report.getAnnexes());
         try {
-            success = prepareDocAndsendToDokpool();
+            success = prepareDocAndSendToDokpool();
         } catch (Exception e) {
             throw new IrixBrokerException("DokpoolClient() not working as expected: ", e);
         }
@@ -534,7 +534,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
      * IrixBrokerProperties.
      * @return true iff sending succeeded.
      */
-    private boolean prepareDocAndsendToDokpool() throws IrixBrokerException {
+    private boolean prepareDocAndSendToDokpool() throws IrixBrokerException {
         success = true;
         String proto = bfsIrixBrokerProperties.getProperty("irix-dokpool.PROTO");
         String host = bfsIrixBrokerProperties.getProperty("irix-dokpool.HOST");
