@@ -2,6 +2,13 @@
 
 ## Version 3.x
 
+### 3.3.0 *future*
+
+ - BREAKING: removed setEvents, getEvents, addActiveEventsfromDokpool and addEventsfromDokpool from DokoolClient
+   - all could only theoretically be used by external callers as they were internally used to 
+     during ELAN property extraction from the IRIX document.
+ - 
+
 ### 3.2.0 *2025-03-27*
 
  - pass on mimetype to dokpool-client

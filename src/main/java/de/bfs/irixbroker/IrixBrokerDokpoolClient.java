@@ -56,7 +56,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private String ReportContext;
     private String Confidentiality = "Free for Public Use";
     private String event = "routinemode"; //first element from List EventIdentification
-    private String[] events = {event}; //first element from List EventIdentification
 
     private List<AnnotationType> annot;
     private List<FileEnclosureType> fet;
@@ -412,6 +411,25 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         Map<String, Object> elanProperties = new HashMap<String, Object>();
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         if (elanmeta != null) {
+        }
+        return elanProperties;
+    }
+
+    /**
+     * Extracts the ELAN events from the DokpoolMeta element
+     * and assigns them to the document. If there are to events,
+     * all active events from the documents dokpool are assigned.
+     * @param d The document to which the events are assigned.
+     * @return ELAN properties as a Map.
+     */
+    private void assignEvents(Document d) {
+        /** point the new Dokument to active or referenced scenarios of the dokpool
+         * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
+         * and are active. If no scenarios are referenced in the request add all active
+         * scenarios
+         */
+        Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
+        if (elanmeta != null) {
             Element myElanEvents = extractSingleElement(elanmeta, TAG_ELANEVENTS);
             NodeList myElanEventList = extractElementNodelist(elanmeta, TAG_ELANEVENT);
             if (myElanEventList != null) {
@@ -419,21 +437,24 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                 for (int i = 0; i < myElanEventList.getLength(); i++) {
                     evlist.add(myElanEventList.item(i).getTextContent());
                 }
-                addEventsfromDokpool(myDocPool, evlist);
+                List<String> assigned = d.assignEventIdsUids(evlist);
+                if (assigned.isEmpty()) {
+                    d.assignEventIdsUids(List.of("routinemode"));
+                }
             } else if (myElanEvents != null) {
                 NodeList myElanEventsList = myElanEvents.getChildNodes();
                 List<String> evlist = new ArrayList<String>();
                 for (int i = 0; i < myElanEventsList.getLength(); i++) {
                     evlist.add(myElanEventsList.item(i).getTextContent());
                 }
-                addEventsfromDokpool(myDocPool, evlist);
+                List<String> assigned = d.assignEventIdsUids(evlist);
+                if (assigned.isEmpty()) {
+                    d.assignEventIdsUids(List.of("routinemode"));
+                }
             } else {
-                addActiveEventsfromDokpool(myDocPool);
+                d.assignAllActiveEvents();
             }
         }
-        elanProperties.put("scenarios", events);
-        elanProperties.put("events", events);
-        return elanProperties;
     }
 
     /**
@@ -571,10 +592,14 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         if (doksys != null && doksys.getTextContent().equalsIgnoreCase("true")) {
             d.update(doksysProperties());
         }
-        // updating document with elan specific properties
+        // updating document with elan specific properties (inlc. events)
         Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
         if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
-            d.update(elanProperties(myDocPool));
+            Map<String,Object> elanProp = elanProperties(myDocPool);
+            if (!elanProp.isEmpty()) {
+                d.update(elanProperties(myDocPool));
+            }
+            assignEvents(d);
         }
         // updating document with rodos specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
@@ -624,52 +649,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return success;
     }
 
-    public void addEventsfromDokpool(DocumentPool dp) {
-        List<Event> events = dp.getEvents();
-        String[] ev = new String[events.size()];
-        for (int i = 0; i < events.size(); i++) {
-            ev[i] = events.get(i).getId();
-        }
-        setEvents(ev);
-    }
-
-    public void addActiveEventsfromDokpool(DocumentPool dp) {
-        List<Event> events = dp.getActiveEvents();
-        String[] ev = new String[events.size()];
-        for (int i = 0; i < events.size(); i++) {
-            ev[i] = events.get(i).getId();
-        }
-        setEvents(ev);
-    }
-
-    public void addEventsfromDokpool(DocumentPool dp, String myevent) {
-        List<Event> events = dp.getEvents();
-        String[] ev = new String[events.size()];
-        for (int i = 0; i < events.size(); i++) {
-            if (events.get(i).getId().equals(myevent)) {
-                ev[i] = events.get(i).getId();
-            }
-        }
-        if (ev.length == 0) {
-            ev[0] = "routinemode";
-        }
-        setEvents(ev);
-    }
-
-    public void addEventsfromDokpool(DocumentPool dp, List<String> myevents) {
-        List<Event> events = dp.getEvents();
-        ArrayList<String> ev = new ArrayList<String>();
-        for (int i = 0; i < events.size(); i++) {
-            if (myevents.contains(events.get(i).getId())) {
-                ev.add(events.get(i).getId());
-            }
-        }
-        if (ev.size() == 0) {
-            ev.add("routinemode");
-        }
-        setEvents(ev.toArray((new String[ev.size()])));
-    }
-
     public String getOrganisationReporting() {
         return OrganisationReporting;
     }
@@ -708,14 +687,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     public void setEvent(String event) {
         this.event = event;
-    }
-
-    public String[] getEvents() {
-        return events;
-    }
-
-    public void setEvents(String[] events) {
-        this.events = events;
     }
 
     public List<AnnotationType> getAnnot() {
