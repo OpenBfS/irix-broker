@@ -2,12 +2,15 @@
 
 ## Version 3.x
 
-### 3.3.0 *future*
+### 3.3.0 *2025-04-28*
 
  - BREAKING: removed setEvents, getEvents, addActiveEventsfromDokpool and addEventsfromDokpool from DokoolClient
-   - all could only theoretically be used by external callers as they were internally used to 
+   - all methods could only be used theoretically by external callers as they were internally used to 
      during ELAN property extraction from the IRIX document.
- - 
+ - Before adding a behavior to a document, we now verify that the docPool supports it
+ - removed some ununsed code and main methods
+ - consistent naming (a docPool vs. the software Dokpool)
+ - updated irix schema to 2.8.0 (liberal Doksys, should not affect IRIXBroker)
 
 ### 3.2.0 *2025-03-27*
 
