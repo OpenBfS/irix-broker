@@ -80,7 +80,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         try {
             success = prepareDocAndSendToDokpool();
         } catch (Exception e) {
-            throw new IrixBrokerException("DokpoolClient() not working as expected: ", e);
+            throw new IrixBrokerException("Error using Dokpool client: " + e.getMessage(), e);
         }
         return success;
     }
@@ -569,7 +569,15 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
 
         //connect to Dokpool using API (wsapi4plone/wsapi4elan)
-        DokpoolBaseService dpService = new DokpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
+        DokpoolBaseService dpService = new DokpoolBaseService(Map.of(
+            "proto", proto,
+            "host", host,
+            "port", port,
+            "plonesite", ploneSite,
+            "username", user,
+            "password", pw,
+            "exceptionPolicy", DokpoolBaseService.OBJCREXCEP
+        ));
         // DocumentPool
         List<DocumentPool> myDocPools = dpService.getDocumentPools();
         DocumentPool myDocPool = getMyDocPool(dpService, myDocPools, dt);
