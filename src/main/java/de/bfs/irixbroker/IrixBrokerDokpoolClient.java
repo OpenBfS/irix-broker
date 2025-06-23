@@ -151,12 +151,12 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
      * with ID specified IrixBrokerProperties is returned. If this
      * also does not exist, use the REST users default pool.
      */
-    private DocumentPool getMyDocPool(DokpoolBaseService DokpoolBaseService, List<DocumentPool> myDocPools, Element dt) {
+    private DocumentPool getMyDocPool(DokpoolBaseService dpService, List<DocumentPool> myDocPools, Element dt) {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
-        DocumentPool myDocPool = DokpoolBaseService.getPrimaryDocumentPool();
+        DocumentPool myDocPool = dpService.getPrimaryDocumentPool();
         Element myDocPoolNameElement = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
         String myDocPoolName = (myDocPoolNameElement != null) ? myDocPoolNameElement.getTextContent() : null;
         boolean specificDocPoolFound = false;
@@ -179,18 +179,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return myDocPool;
     }
 
-/*    private DocumentPool getMyDocPool(DokpoolBaseService DokpoolBaseService, List<DocumentPool> myDocPools) {
+/*    private DocumentPool getMyDocPool(DokpoolBaseService dpService, List<DocumentPool> myDocPools) {
         Element dt = new Element;
-        return getMyDocPool(DokpoolBaseService, myDocPools, dt);
+        return getMyDocPool(dpService, myDocPools, dt);
     }*/
 
-    private Folder getMyGroupFolder(DokpoolBaseService DokpoolBaseService, DocumentPool myDocPool) {
+    private Folder getMyGroupFolder(DokpoolBaseService dpService, DocumentPool myDocPool) {
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
         String ploneGroupFolder = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
 
         Element myDocPoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
-        List<DocumentPool> myDocPools = DokpoolBaseService.getDocumentPools();
+        List<DocumentPool> myDocPools = dpService.getDocumentPools();
         Folder myGroupFolder = null;
         boolean folderFound = false;
         if (myDocPoolGroupFolder  == null) {
@@ -569,13 +569,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         String desc = "Original date: " + DateTime.toString() + " " + ReportContext + " " + Confidentiality;
 
         //connect to Dokpool using API (wsapi4plone/wsapi4elan)
-        DokpoolBaseService DokpoolBaseService = new DokpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
+        DokpoolBaseService dpService = new DokpoolBaseService(proto + "://" + host + ":" + port + "/" + ploneSite, user, pw);
         // DocumentPool
-        List<DocumentPool> myDocPools = DokpoolBaseService.getDocumentPools();
-        DocumentPool myDocPool = getMyDocPool(DokpoolBaseService, myDocPools, dt);
+        List<DocumentPool> myDocPools = dpService.getDocumentPools();
+        DocumentPool myDocPool = getMyDocPool(dpService, myDocPools, dt);
         //GroupFolder
         List<Folder> groupFolders = myDocPool.getGroupFolders();
-        Folder myGroupFolder = getMyGroupFolder(DokpoolBaseService, myDocPool);
+        Folder myGroupFolder = getMyGroupFolder(dpService, myDocPool);
         // hashmap to store the generic dokpool meta data
         Map<String, Object> docProperties = new HashMap<String, Object>();
         docProperties.put("title", title);
