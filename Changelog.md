@@ -2,6 +2,10 @@
 
 ## Version 3.x
 
+### 3.3.1 *2025-06-23*
+
+ - allow some exceptions from Dokpool client which allows better error handling
+
 ### 3.3.0 *2025-04-28*
 
  - BREAKING: removed setEvents, getEvents, addActiveEventsfromDokpool and addEventsfromDokpool from DokoolClient
