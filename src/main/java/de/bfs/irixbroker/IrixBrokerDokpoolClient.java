@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.time.ZonedDateTime;
 
 import java.net.URLEncoder;
@@ -37,10 +38,11 @@ import org.iaea._2012.irix.format.annexes.FileEnclosureType;
 import org.iaea._2012.irix.format.identification.EventIdentificationType;
 import org.iaea._2012.irix.format.identification.IdentificationType;
 
+import de.bfs.dokpool.client.base.DokpoolBaseService;
+import de.bfs.dokpool.client.base.DokpoolRuntimeException;
 import de.bfs.dokpool.client.content.Document;
 import de.bfs.dokpool.client.content.DocumentPool;
 import de.bfs.dokpool.client.content.Event;
-import de.bfs.dokpool.client.base.DokpoolBaseService;
 import de.bfs.dokpool.client.content.Folder;
 
 import org.w3c.dom.Element;
@@ -151,12 +153,18 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
      * with ID specified IrixBrokerProperties is returned. If this
      * also does not exist, use the REST users default pool.
      */
-    private DocumentPool getMyDocPool(DokpoolBaseService dpService, List<DocumentPool> myDocPools, Element dt) {
+    private DocumentPool getMyDocPool(DokpoolBaseService dpService, List<DocumentPool> myDocPools, Element dt)
+            throws IrixBrokerException {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
         String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
-        DocumentPool myDocPool = dpService.getPrimaryDocumentPool();
+        DocumentPool myDocPool = null;
+        try {
+            myDocPool = dpService.getPrimaryDocumentPool();
+        } catch (DokpoolRuntimeException dre) {
+            log.log(WARNING, "No primary document Pool found (continue to try default and doc. pool from IRIX document)");
+        }
         Element myDocPoolNameElement = extractSingleElement(dokpoolmeta, TAG_DOKPOOLNAME);
         String myDocPoolName = (myDocPoolNameElement != null) ? myDocPoolNameElement.getTextContent() : null;
         boolean specificDocPoolFound = false;
@@ -174,6 +182,11 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
                     myDocPool = sDocPool;
                 }
             }
+        }
+
+        if (myDocPool == null) {
+            log.log(ERROR, "No document Pool found (primary, default, IRIX doc.).");
+            throw new IrixBrokerException("Not docPool found.", null);
         }
 
         return myDocPool;
@@ -576,9 +589,13 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
             "plonesite", ploneSite,
             "username", user,
             "password", pw,
-            "exceptionPolicy", DokpoolBaseService.OBJCREXCEP
+            "exceptionPolicy", Set.of(
+                DokpoolBaseService.OBJCREXCEP,
+                DokpoolBaseService.DOCPEXCEP
+            )
         ));
         // DocumentPool
+        // This might throw a runtime exception, e.g., if Dokpool i unreachable:
         List<DocumentPool> myDocPools = dpService.getDocumentPools();
         DocumentPool myDocPool = getMyDocPool(dpService, myDocPools, dt);
         //GroupFolder
