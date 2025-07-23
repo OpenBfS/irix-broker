@@ -2,6 +2,10 @@
 
 ## Version 3.x
 
+### 3.3.2 *2025-07-23*
+
+ - also handle exceptions related to document pool requests
+
 ### 3.3.1 *2025-06-23*
 
  - allow some exceptions from Dokpool client which allows better error handling
