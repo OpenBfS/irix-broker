@@ -34,7 +34,7 @@
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.4</version>
+            <version>4.0.5</version>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
@@ -63,7 +63,7 @@
             <plugin>
                 <groupId>org.jvnet.jaxb</groupId>
                 <artifactId>jaxb-maven-plugin</artifactId>
-                <version>4.0.11</version>
+                <version>4.0.12</version>
                 <executions>
                     <execution>
                         <goals>
@@ -123,7 +123,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.2</version>
+                <version>3.12.0</version>
                 <configuration>
                     <reportOutputDirectory>${project.build.directory}/..</reportOutputDirectory>
                     <show>private</show>
@@ -133,7 +133,7 @@
         <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <version>12.1.8</version>
+        <version>12.2.0</version>
         <executions>
                 <execution>
             <goals>
