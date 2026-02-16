@@ -242,7 +242,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
 
     /**
      * Turns all active behaviors in the IRIX document's DokpoolMeta
-     * into a list of behaviors. "<IsBehavior>true</IsBehavior>" becomes the
+     * into a list of behaviors. "&lt;IsBehavior&gt;true&lt;/IsBehavior&gt;" becomes the
      * list element "behavior". Behaviors are only added if the app is
      * supported by the current document pool.
      * @return Map where the only entry is the list of behaviors with key "local_behaviors".
@@ -433,7 +433,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
      * and assigns them to the document. If there are to events,
      * all active events from the documents dokpool are assigned.
      * @param d The document to which the events are assigned.
-     * @return ELAN properties as a Map.
      */
     private void assignEvents(Document d) {
         /** point the new Dokument to active or referenced scenarios of the dokpool
