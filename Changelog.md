@@ -2,6 +2,11 @@
 
 ## Version 3.x
 
+### 3.4.0 *2026-04-17*
+
+ - move to Java 25
+ - bump dokpool-client version to 3.4.0
+
 ### 3.3.4 *2026-02-16*
 
  - bump dokpool-client version to 3.3.4
