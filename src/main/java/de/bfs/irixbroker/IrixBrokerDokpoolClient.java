@@ -41,6 +41,7 @@ import org.iaea._2012.irix.format.identification.IdentificationType;
 import de.bfs.dokpool.client.base.DokpoolBaseService;
 import de.bfs.dokpool.client.base.DokpoolRuntimeException;
 import de.bfs.dokpool.client.content.Document;
+import de.bfs.dokpool.client.content.DocumentFamily;
 import de.bfs.dokpool.client.content.DocumentPool;
 import de.bfs.dokpool.client.content.Event;
 import de.bfs.dokpool.client.content.Folder;
@@ -67,6 +68,9 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private Element dokpoolmeta; //DOM Element with the full dokpoolmeta information
     private DokpoolMeta dokpoolMeta;
     private Properties bfsIrixBrokerProperties;
+
+    private static final String ALL_ACTIVE = "all-active";
+    private static final String SINGLE_PREFIX = "single";
 
     private boolean success = false;
 
@@ -142,7 +146,7 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         return success;
     }
 
-    private boolean publish(Document d) {
+    private boolean publish(DocumentFamily d) {
         d.setWorkflowStatus("publish");
         return true;
     }
@@ -156,7 +160,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     private DocumentPool getMyDocPool(DokpoolBaseService dpService, List<DocumentPool> myDocPools, Element dt)
             throws IrixBrokerException {
         //TODO use primaryDokpool (of irixauto) or configuration file "ploneDokpool"?
-        String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
         String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
 
         DocumentPool myDocPool = null;
@@ -198,8 +201,6 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
     }*/
 
     private Folder getMyGroupFolder(DokpoolBaseService dpService, DocumentPool myDocPool) {
-        String ploneSite = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_SITE");
-        String ploneDokpool = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_DOKPOOL");
         String ploneGroupFolder = bfsIrixBrokerProperties.getProperty("irix-dokpool.PLONE_GROUPFOLDER");
 
         Element myDocPoolGroupFolder = extractSingleElement(dokpoolmeta, TAG_DOKPOOLGROUPFOLDER);
@@ -415,58 +416,66 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
      * Extracts the ELAN properties from the DokpoolMeta element.
      * @return ELAN properties as a Map.
      */
-    private Map<String, Object> elanProperties(DocumentPool myDocPool) {
-        /** point the new Dokument to active or referenced scenarios of the dokpool
-         * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
-         * and are active. If no scenarios are referenced in the request add all active
-         * scenarios
-         */
+    private Map<String, Object> elanProperties() {
         Map<String, Object> elanProperties = new HashMap<String, Object>();
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
-        if (elanmeta != null) {
-        }
         return elanProperties;
     }
 
     /**
      * Extracts the ELAN events from the DokpoolMeta element
-     * and assigns them to the document. If there are to events,
-     * all active events from the documents dokpool are assigned.
+     * and returns them as list. If there are to events,
+     * all active events from the documents dokpool are assigned or,
+     * depending on irix-dokpool.DEFAULT_EVENTS_STRATEGY a
+     * default event.
      * @param d The document to which the events are assigned.
      */
-    private void assignEvents(Document d) {
-        /** point the new Dokument to active or referenced scenarios of the dokpool
-         * if scenarios are referenced in request: add those that exist in Dokpool/ELAN
-         * and are active. If no scenarios are referenced in the request add all active
-         * scenarios
-         */
+    private List<String> determineEvents(DocumentPool dp) throws IrixBrokerException {
+        String defaultStrategy = bfsIrixBrokerProperties.getProperty("irix-dokpool.DEFAULT_EVENTS_STRATEGY");
+        defaultStrategy = defaultStrategy == null ? ALL_ACTIVE : defaultStrategy;
+        boolean allActiveDefault =  defaultStrategy.equals(ALL_ACTIVE);
+        String defaultEvent = "";
+        if (!allActiveDefault) {
+            if (!defaultStrategy.startsWith(SINGLE_PREFIX)) {
+                throw new IrixBrokerException("Unknown default event strategy: " + defaultStrategy, null);
+            }
+            defaultEvent = defaultStrategy.substring(SINGLE_PREFIX.length());
+        }
+
+        // boolean useDefaultEvents = true;
+        List<String> evlist = new ArrayList<String>();
+
         Element elanmeta = extractSingleElement(dokpoolmeta, TAG_ELAN);
         if (elanmeta != null) {
             Element myElanEvents = extractSingleElement(elanmeta, TAG_ELANEVENTS);
             NodeList myElanEventList = extractElementNodelist(elanmeta, TAG_ELANEVENT);
             if (myElanEventList != null) {
-                List<String> evlist = new ArrayList<String>();
                 for (int i = 0; i < myElanEventList.getLength(); i++) {
                     evlist.add(myElanEventList.item(i).getTextContent());
                 }
-                List<String> assigned = d.assignEventIdsUids(evlist);
-                if (assigned.isEmpty()) {
-                    d.assignEventIdsUids(List.of("routinemode"));
-                }
+                evlist = dp.filterInactiveEventIds(evlist);
             } else if (myElanEvents != null) {
                 NodeList myElanEventsList = myElanEvents.getChildNodes();
-                List<String> evlist = new ArrayList<String>();
                 for (int i = 0; i < myElanEventsList.getLength(); i++) {
                     evlist.add(myElanEventsList.item(i).getTextContent());
                 }
-                List<String> assigned = d.assignEventIdsUids(evlist);
-                if (assigned.isEmpty()) {
-                    d.assignEventIdsUids(List.of("routinemode"));
-                }
-            } else {
-                d.assignAllActiveEvents();
+                evlist = dp.filterInactiveEventIds(evlist);
             }
+
+            if (evlist.isEmpty()) {
+                if (allActiveDefault) {
+                    for (Event ev : dp.getActiveEvents()) {
+                        evlist.add(ev.getId());
+                    }
+                } else {
+                    evlist.add(defaultEvent);
+                }
+            }
+            return evlist;
+        } else {
+            return null;
         }
+
     }
 
     /**
@@ -609,21 +618,35 @@ public class IrixBrokerDokpoolClient implements IrixBrokerDokpoolXMLNames {
         docProperties.put("docType", dt.getTextContent());
         docProperties.putAll(behaviors(myDocPool));
         docProperties.putAll(subjects());
-        log.log(INFO, "Creating new Dokument in " + myGroupFolder.getFolderPath());
-        Document d = myGroupFolder.createDPDocument(ReportId, docProperties);
+
+        // ELAN only supports one event per document starting from Dokpool 2.6.
+        // If we want t assign more than one event, we need a family of documents.
+        // Thus, we check for ELAN behavior and events first:
+        Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
+        List<String> evList = null;
+        List<String> idList = new ArrayList<String>();
+        if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
+            evList = determineEvents(myDocPool);
+            if (evList.size() > 1) {
+                for (String evid : evList) {
+                    idList.add(ReportId + "-" + evid);
+                }
+            }
+        }
+        if (idList.isEmpty()) {
+            idList.add(ReportId);
+        }
+
+        log.log(INFO, "Creating new Dokument(s) in " + myGroupFolder.getPathWithPlonesite());
+        DocumentFamily d = myGroupFolder.createDPDocumentFamily(idList.toArray(new String[0]), docProperties);
         // updating document with doksys specific properties
         Element doksys = extractSingleElement(dokpoolmeta, TAG_ISDOKSYS);
         if (doksys != null && doksys.getTextContent().equalsIgnoreCase("true")) {
             d.update(doksysProperties());
         }
         // updating document with elan specific properties (inlc. events)
-        Element elan = extractSingleElement(dokpoolmeta, TAG_ISELAN);
         if (elan != null && elan.getTextContent().equalsIgnoreCase("true")) {
-            Map<String,Object> elanProp = elanProperties(myDocPool);
-            if (!elanProp.isEmpty()) {
-                d.update(elanProperties(myDocPool));
-            }
-            assignEvents(d);
+            d.mapEventsToDocuments(evList);
         }
         // updating document with rodos specific properties
         Element rodos = extractSingleElement(dokpoolmeta, TAG_ISRODOS);
